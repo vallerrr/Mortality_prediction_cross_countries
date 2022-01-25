@@ -1,0 +1,121 @@
+import pandas as pd
+import numpy as np
+import re
+
+
+def data_reader():
+    dfMort = pd.read_csv("/Users/valler/OneDrive - Nexus365/Replication/Python_hrsPsyMort_20190208.csv", index_col=0)
+    dfMort['ZincomeT'] = np.where(dfMort['Zincome'] >= 1.80427, 1.80427, dfMort['Zincome'])
+    dfMort['ZwealthT'] = np.where(dfMort['Zwealth'] >= 3.49577, 3.49577, dfMort['Zwealth'])
+    return dfMort
+
+
+def domain_dict():
+    domain_diction = {'demographic': ['maleYN', 'blackYN', 'hispanicYN', 'otherYN', 'migrantYN','age'],
+                      'child_adverse': ['sumCAE', 'fathersocc', 'Zfatherseduc', 'Zmotherseduc', 'fatherunemp',
+                                        'relocate',
+                                        'finhelp', 'maleYN', 'blackYN', 'hispanicYN', 'otherYN', 'migrantYN'],
+                      'adult_SES': ['rocc', 'ZwealthT', 'ZincomeT', 'everrent', 'evermedicaid', 'everfoodstamp',
+                                    'everunemployed', 'everfoodinsec', 'Zeduccat', 'Zrecentfindiff', 'Zneighsafety',
+                                    'Zneighcohesion', 'Zneighdisorder', 'maleYN', 'blackYN', 'hispanicYN', 'otherYN',
+                                    'migrantYN'],
+                      'behavioral': ['vigactivityYN', 'modactivityYN', 'alcoholYN', 'sleepYN', 'eversmokeYN',
+                                     'currsmokeYN', 'maleYN', 'blackYN', 'hispanicYN', 'otherYN', 'migrantYN'],
+                      'adult_adverse': ['sumadultAE', 'Zmajdiscrim', 'Zdailydiscrim', 'maleYN', 'blackYN', 'hispanicYN',
+                                        'otherYN', 'migrantYN'],
+                      'social_connection': ['Znegchildren', 'Znegfamily', 'Znegfriends', 'Zposchildren', 'Zposfamily',
+                                            'nevermarried', 'everdivorced', 'maleYN', 'blackYN', 'hispanicYN',
+                                            'otherYN',
+                                            'migrantYN'],
+                      'psych': ['Zagreeableness', 'Zangerin', 'Zangerout', 'Zanxiety', 'Zconscientiousness',
+                                'Zcynhostility', 'Zextroversion', 'Zhopelessness', 'Zlifesatis', 'Zloneliness',
+                                'Znegaffect', 'Zneuroticism', 'Zopenness', 'Zoptimism', 'Zperceivedconstraints',
+                                'Zperceivedmastery', 'Zpessimism', 'Zposaffect', 'Zpurpose', 'Zreligiosity', 'maleYN',
+                                'blackYN', 'hispanicYN', 'otherYN', 'migrantYN'],
+                      'all': ['age','rocc', 'fathersocc', 'Zfatherseduc', 'Zmotherseduc', 'fatherunemp', 'relocate',
+                              'finhelp',
+                              'sumCAE', 'ZwealthT', 'ZincomeT', 'everrent', 'evermedicaid', 'everfoodstamp',
+                              'everunemployed', 'everfoodinsec', 'Zeduccat', 'Zrecentfindiff', 'Zneighsafety',
+                              'Zneighcohesion', 'Zneighdisorder', 'vigactivityYN', 'modactivityYN', 'alcoholYN',
+                              'sleepYN',
+                              'eversmokeYN', 'currsmokeYN', 'sumadultAE', 'Zmajdiscrim', 'Zdailydiscrim',
+                              'Znegchildren',
+                              'Znegfamily', 'Znegfriends', 'Zposchildren', 'Zposfamily', 'nevermarried', 'everdivorced',
+                              'Zagreeableness', 'Zangerin', 'Zangerout', 'Zanxiety', 'Zconscientiousness',
+                              'Zcynhostility',
+                              'Zextroversion', 'Zhopelessness', 'Zlifesatis', 'Zloneliness', 'Znegaffect',
+                              'Zneuroticism',
+                              'Zopenness', 'Zoptimism', 'Zperceivedconstraints', 'Zperceivedmastery', 'Zpessimism',
+                              'Zposaffect', 'Zpurpose', 'Zreligiosity', 'maleYN', 'blackYN', 'hispanicYN', 'otherYN',
+                              'migrantYN']}
+    return domain_diction
+
+
+def variable_dict():
+    var_dict = {"maleYN": "Male",
+                "blackYN": "Black",
+                "hispanicYN": "Hispanic",
+                "otherYN": "Other races",
+                "migrantYN": "Foreign Born",
+                "Zfatherseduc": "Lower Education Father",
+                "Zmotherseduc": "Lower Education Mother",
+                "fathersocc": "Lower Father Occupational Status",
+                "relocate": "Relocated Homes in Childhood",
+                "finhelp": "Family Received Financial Help in Childhood",
+                "fatherunemp": "Father was Unemployed in Childhood",
+                "sumCAE": "Childhood Psychosocial Adversities",
+                "ZwealthT": "Lower Wealth",
+                "age": "Age",
+                #Income here
+                "ZincomeT": "Lower Income",
+                "rocc": "Lower Occupational Status",
+                "everrent": "History of Renting",
+                "evermedicaid": "History of Medicaid",
+                "everfoodstamp": "History of Food Stamps",
+                "everunemployed": "History of Unemployment",
+                "everfoodinsec": "History of Food Insecurity",
+                "Zeduccat": "Lower Education",
+                "Zrecentfindiff": "Recent Financial Difficulties",
+                "Zneighsafety": "Lower Neighborhood Safety",
+                "Zneighcohesion": "Lower Neighborhood Cohesion",
+                "Zneighdisorder": "Neighborhood Disorder",
+                "vigactivityYN": "Low/No Vigorous Activity",
+                "modactivityYN": "Low/No Moderate Activity",
+                "alcoholYN": "Alcohol Abuse",
+                "sleepYN": "Sleep Problems",
+                "eversmokeYN": "History of Smoking",
+                "currsmokeYN": "Current Smoker",
+                "sumadultAE": "Adulthood Psychosocial Adversity",
+                "Zmajdiscrim": "Major Discrimination",
+                "Zdailydiscrim": "Daily Discrimination",
+                "Znegchildren": "Negative Interactions with Children",
+                "Znegfamily": "Negative Interactions with Family",
+                "Znegfriends": "Negative Interactions with Friends",
+                "Zposchildren": "Lower Positive Interactions with Children",
+                "Zposfamily": "Lower Positive Interactions with Family",
+                "Zposfriends": "Lower Positive Interactions with Friends",
+                "everdivorced": "History of Divorce",
+                "nevermarried": "Never Married",
+                "Zagreeableness": "Lower Agreeableness ",
+                "Zangerin": "Anger In",
+                "Zangerout": "Anger Out",
+                "Zanxiety": "Trait Anxiety",
+                "Zconscientiousness": "Lower Conscientiousness",
+                "Zcynhostility": "Cynical Hostility",
+                "Zextroversion": "Lower Extroversion",
+                "Zhopelessness": "Hopelessness",
+                "Zlifesatis": "Lower Life Satisfaction",
+                "Zloneliness": "Loneliness",
+                "Znegaffect": "Negative Affectivity",
+                "Zneuroticism": "Lower Neuroticism",
+                "Zopenness": "Lower Openness to Experiences",
+                "Zoptimism": "Lower Optimism",
+                "Zperceivedconstraints": "Perceptions of Obstacles",
+                "Zperceivedmastery": "Lower Sense of Mastery",
+                "Zpessimism": "Pessimism",
+                "Zposaffect": "Lower Positive Affectivity",
+                "Zpurpose": "Lower Purpose in Life",
+                "Zreligiosity": "Lower Religiosity"
+                }
+    return var_dict
+
