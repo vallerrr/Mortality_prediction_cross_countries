@@ -1,16 +1,15 @@
 import numpy as np
 import pandas as pd
 import itertools
-import DataImport
-
-import Evaluate
-from Models import Model_fixed_test_size
+from src import DataImport
+from src import Evaluate
+from src import Models
 from sklearn.metrics import f1_score, precision_recall_curve, auc, roc_auc_score
 
 
 def model_fit_and_store_result(df, goal_domain, group_number, test_size, domain_lst, domains_to_iter, model_eval):
     # model fit
-    model = Model_fixed_test_size(data=df, test_size=test_size, domain_list=domain_lst, model='xgb',
+    model = Models.Model_fixed_test_size(data=df, test_size=test_size, domain_list=domain_lst, model='xgb',
                                   train_subset_size=1, order=0)
     pred_prob, pred_label = model.test_set_predict_prob, model.test_set_predict
     y_test, sample_weight = model.y_test, model.test_sample_weight
@@ -69,8 +68,10 @@ domain_name_lst = list(domains.keys())
 domain_name_lst.remove('all')
 # domain_name_lst.remove('demographic')
 # data structure to store info
-model_eval = pd.DataFrame(columns=['model', 'goal_domain', 'group_number', 'domain_list', 'domain_num', 'domain_names',
-             'pr_no_skill', 'pr_f1', 'pr_auc', 'roc_no_skill', 'roc_auc', 'brier'])
+model_eval = pd.DataFrame(columns=['model', 'goal_domain', 'group_number',
+                                   'domain_list', 'domain_num', 'domain_names',
+                                   'pr_no_skill', 'pr_f1', 'pr_auc',
+                                   'roc_no_skill', 'roc_auc', 'brier'])
 # -------------------------------------------------------------------------
 
 
@@ -167,9 +168,10 @@ for goal_domain in domain_name_lst:
     #              'pr_auc_contribution','pr_auc_percent',
     #              'roc_auc_contribution','roc_auc_percent',
     #              'brier_contribution','brier_percent']
+
     contribution.loc[len(contribution)] = [goal_domain, f1_contribution, f1_contribution_percent,
                                            pr_auc_contribution, pr_auc_contribution_percent,
                                            roc_auc_contribution, roc_auc_contribution_percent,
-                                           brier_contribution,brier_contribution_percent]
+                                           brier_contribution, brier_contribution_percent]
 
 
