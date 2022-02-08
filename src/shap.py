@@ -14,6 +14,7 @@ var_dict = DataImport.variable_dict()
 
 # variable preprocess
 # income
+
 '''
 df['ZincomeT'].describe()
 df['ZincomeT'] = -1*df['ZincomeT']
@@ -25,12 +26,12 @@ df['ZwealthT']=-1*df['ZwealthT']
 var_dict['ZwealthT'] = 'Wealth'
 '''
 # everunemployed
-df['everunemployed'].describe()
-df['everunemployed']=df['everunemployed'].apply(lambda x: 1.00 if x > 0 else -1.00)
+# df['everunemployed'].describe()
+df['everunemployed'] = df['everunemployed'].apply(lambda x: 1.00 if x > 0 else -1.00)
 
 # Zanxiety
 df['Zanxiety'].describe()
-#df['Zanxiety'].hist()
+# df['Zanxiety'].hist()
 #plt.show()
 
 # Zperceivedconstraints
@@ -41,7 +42,6 @@ df['Zperceivedconstraints'].describe()
 df['Zconscientiousness'].describe()
 #df['Zconscientiousness'].hist()
 #plt.show()
-
 
 model = Models.Model_fixed_test_size(data=df, test_size=test_size, domain_list=domains['all'], model='xgb',
                                       train_subset_size=1, order=0)

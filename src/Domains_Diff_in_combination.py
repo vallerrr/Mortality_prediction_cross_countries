@@ -139,8 +139,3 @@ for goal_domain in domain_name_lst:
     # columns=['goal_domain','pr_f1_contribution','pr_auc_contribution','roc_auc_contribution','brier_contribution']
     contribution.loc[len(contribution)] = [goal_domain, pr_f1_contribution, pr_auc_contribution, roc_auc_contribution, brier_contribution]
 
-
-
-test = model_eval_diff.loc[model_eval_diff['goal_domain'] == goal_domain, 'brier']
-
-
