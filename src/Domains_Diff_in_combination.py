@@ -1,16 +1,16 @@
 import numpy as np
 import pandas as pd
 import itertools
-import DataImport
+from src import DataImport
 
-import Evaluate
-from Models import Model_fixed_test_size
+from src import Evaluate
+from src import Models
 from sklearn.metrics import f1_score, precision_recall_curve, auc, roc_auc_score
 
 
 def model_fit_and_store_result(df, goal_domain, group_number, test_size, domain_lst, domains_to_iter, model_eval):
     # model fit
-    model = Model_fixed_test_size(data=df, test_size=test_size, domain_list=domain_lst, model='xgb',
+    model = Models.Model_fixed_test_size(data=df, test_size=test_size, domain_list=domain_lst, model='xgb',
                                   train_subset_size=1, order=0)
     pred_prob, pred_label = model.test_set_predict_prob, model.test_set_predict
     y_test, sample_weight = model.y_test, model.test_sample_weight
@@ -24,8 +24,11 @@ def model_fit_and_store_result(df, goal_domain, group_number, test_size, domain_
     roc_no_skill = 0.5
     auc_score = roc_auc_score(y_test, pred_prob, sample_weight=sample_weight)
 
-    #brier
+    # brier
     brier = Evaluate.brier(y_test, pred_prob)
+
+    # imv
+    imv = Evaluate.imv(y_test, model.y_train, pred_prob)
 
     # domain name
     domain_name, switch = '', True
@@ -49,8 +52,7 @@ def model_fit_and_store_result(df, goal_domain, group_number, test_size, domain_
     # print('domains to store:{}'.format(domains_to_iter))
     model_eval.loc[len(model_eval)] = [model, goal_domain, group_number, domains_to_iter, len(domains_to_iter),
                                        domain_name, pr_no_skill, pr_f1,
-                                       pr_auc,
-                                       roc_no_skill, auc_score, brier]
+                                       pr_auc, roc_no_skill, auc_score, brier, imv]
 
     return model_eval
 
@@ -63,9 +65,8 @@ domain_name_lst = list(domains.keys())
 domain_name_lst.remove('all')
 domain_name_lst.remove('demographic')
 # data structure to store info
-model_eval = pd.DataFrame(
-    columns=['model', 'goal_domain', 'group_number', 'domain_list', 'domain_num', 'domain_names',
-             'pr_no_skill', 'pr_f1', 'pr_auc', 'roc_no_skill', 'roc_auc', 'brier'])
+model_eval = pd.DataFrame(columns=['model', 'goal_domain', 'group_number', 'domain_list', 'domain_num', 'domain_names',
+                                   'pr_no_skill', 'pr_f1', 'pr_auc', 'roc_no_skill', 'roc_auc', 'brier', 'imv'])
 # -------------------------------------------------------------------------
 
 
@@ -90,8 +91,10 @@ for goal_domain in domain_name_lst:
             # without the goal domain
             domains_to_iter_without_goal.remove(goal_domain)
             domain_lst_without_goal = domains['demographic']
-            for single_domain in domains_to_iter_without_goal: domain_lst_without_goal = list(
+            for single_domain in domains_to_iter_without_goal:
+                domain_lst_without_goal = list(
                 set(domain_lst_without_goal + domains[single_domain]))
+
             model_eval = model_fit_and_store_result(df, goal_domain, group_number, test_size, domain_lst_without_goal,
                                                     domains_to_iter_without_goal, model_eval)
 
@@ -107,9 +110,9 @@ for goal_domain in domain_name_lst:
 
 # post process-------------------------------------------------------------
 model_eval_diff = pd.DataFrame(
-    columns=['goal_domain', 'group_number', 'domain_list', 'domain_num', 'pr_f1', 'pr_auc', 'roc_auc','brier'])
+    columns=['goal_domain', 'group_number', 'domain_list', 'domain_num', 'pr_f1', 'pr_auc', 'roc_auc','brier','imv'])
 contribution = pd.DataFrame(
-    columns=['goal_domain', 'pr_f1_contribution', 'pr_auc_contribution', 'roc_auc_contribution','brier_contribution'])
+    columns=['goal_domain', 'pr_f1_contribution', 'pr_auc_contribution', 'roc_auc_contribution','brier_contribution','imv_contribution'])
 
 for goal_domain in domain_name_lst:
     post_process_model_eval = model_eval.loc[model_eval['goal_domain'] == goal_domain]
@@ -124,18 +127,20 @@ for goal_domain in domain_name_lst:
         post_row_max = post_to_process[post_to_process['domain_num'] == max(post_to_process['domain_num'])].to_dict(
             'list')
 
-        # columns=['goal_domain','group_number','domain_list','domain_num','pr_f1','pr_auc','roc_auc','brier']
+        # columns=['goal_domain','group_number','domain_list','domain_num','pr_f1','pr_auc','roc_auc','brier','imv']
         model_eval_diff.loc[len(model_eval_diff)] = [post_row_max['goal_domain'][0], post_row_max['group_number'][0],
-                                                     post_row_max['domain_list'][0], post_row_max['domain_num'][0], \
+                                                     post_row_max['domain_list'][0], post_row_max['domain_num'][0],
                                                      post_row_max['pr_f1'][0] - post_row_min['pr_f1'][0],
                                                      post_row_max['pr_auc'][0] - post_row_min['pr_auc'][0],
                                                      post_row_max['roc_auc'][0] - post_row_min['roc_auc'][0],
-                                                     post_row_max['brier'][0] - post_row_min['brier'][0]]
+                                                     post_row_max['brier'][0] - post_row_min['brier'][0],
+                                                     post_row_max['imv'][0] - post_row_min['imv'][0]]
 
     pr_f1_contribution = model_eval_diff.loc[model_eval_diff['goal_domain'] == goal_domain, 'pr_f1'].mean()
     pr_auc_contribution = model_eval_diff.loc[model_eval_diff['goal_domain'] == goal_domain, 'pr_auc'].mean()
     roc_auc_contribution = model_eval_diff.loc[model_eval_diff['goal_domain'] == goal_domain, 'roc_auc'].mean()
     brier_contribution = model_eval_diff.loc[model_eval_diff['goal_domain'] == goal_domain, 'brier'].mean()
-    # columns=['goal_domain','pr_f1_contribution','pr_auc_contribution','roc_auc_contribution','brier_contribution']
-    contribution.loc[len(contribution)] = [goal_domain, pr_f1_contribution, pr_auc_contribution, roc_auc_contribution, brier_contribution]
+    imv_contribution = model_eval_diff.loc[model_eval_diff['goal_domain'] == goal_domain, 'imv'].mean()
+    # columns=['goal_domain','pr_f1_contribution','pr_auc_contribution','roc_auc_contribution','brier_contribution','imv_contribution']
+    contribution.loc[len(contribution)] = [goal_domain, pr_f1_contribution, pr_auc_contribution, roc_auc_contribution, brier_contribution,imv_contribution]
 

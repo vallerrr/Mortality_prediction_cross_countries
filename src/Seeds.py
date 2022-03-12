@@ -3,24 +3,11 @@ import pandas as pd
 from sklearn.model_selection import KFold, StratifiedKFold
 import numpy as np
 import random
+import Evaluate
+from src import DataImport
 from sklearn.model_selection import train_test_split
 import sklearn.metrics as metrics
 
-
-def ffc_rsquare(true, pred, train):
-    # TODO：pred here should be probs or true lables? now I'm using probs
-    n = float(len(true))
-    t1 = np.sum(np.power(true - pred, 2.0))
-    t2 = np.sum(np.power((true - (np.sum(train) / n)), 2.0))
-    return 1.0 - (t1 / t2)
-
-
-def efron_rsquare(true, pred):
-    # here the pred is predicted probabilities
-    n = float(len(true))
-    t1 = np.sum(np.power(true - pred, 2.0))
-    t2 = np.sum(np.power((true - (np.sum(true) / n)), 2.0))
-    return 1.0 - (t1 / t2)
 
 
 def store_coef(count, k, model_name, seed, model, domains, df_coef, cv_name):
@@ -33,21 +20,6 @@ def store_coef(count, k, model_name, seed, model, domains, df_coef, cv_name):
     return df_coef
 
 
-def seed_evaluate_metric(true, pred_label, pred_prob, train, weight):
-    metric_dict = {}
-    fpr, tpr, threshold = metrics.roc_curve(true, pred_label, pos_label=1)
-    metric_dict['auc'] = metrics.auc(fpr, tpr)
-    metric_dict['f1'] = metrics.f1_score(true, pred_label, sample_weight=weight)
-    metric_dict['efron_r2'] = efron_rsquare(true, pred_prob)
-    metric_dict['ffc_r2'] = ffc_rsquare(true, pred_prob, train)  # TODO: pred_prob or pred?
-
-    return metric_dict
-
-def data_reader():
-    dfMort = pd.read_csv("Python_hrsPsyMort_20190208.csv", index_col=0)
-    dfMort['ZincomeT'] = np.where(dfMort['Zincome'] >= 1.80427, 1.80427, dfMort['Zincome'])
-    dfMort['ZwealthT'] = np.where(dfMort['Zwealth'] >= 3.49577, 3.49577, dfMort['Zwealth'])
-    return dfMort
 
 def domain_dict():
     dict = {'all': ['rocc', 'fathersocc', 'Zfatherseduc', 'Zmotherseduc', 'fatherunemp', 'relocate', 'finhelp',
@@ -66,7 +38,7 @@ def domain_dict():
 if __name__ == '__main__':
     pd.set_option('precision', 9)
     # read data
-    df = data_reader()
+    df = DataImport.data_reader()
     domain_dict = domain_dict()
     domains = list(set(domain_dict['all']))
 
@@ -100,7 +72,7 @@ if __name__ == '__main__':
 
                 pred, pred_prob = model.predict(test_X[domains]), model.predict_proba(test_X[domains])[:, 1]
                 # TODO: for each split, the predictions should be made on the test set or the cross validation test set?
-                Eval = seed_evaluate_metric(test_y, pred, pred_prob, y, test_X['sampWeight'])
+                Eval = Evaluate.evaluate_metric(test_y, pred, pred_prob, y, test_X['sampWeight'])
                 df_eval.loc[len(df_eval),] = [model, seed, 'NO fold splitting', k, NOK, Eval['auc'], Eval['f1'],
                                               Eval['efron_r2'], Eval['ffc_r2']]
             else:
@@ -125,7 +97,16 @@ if __name__ == '__main__':
                         df_coef = store_coef(count, k, model_name, seed, model, domains, df_coef, cv_name)
 
                         # store result evaluations
-                        pred, pred_prob = model.predict(test_X[domains]), model.predict_proba(test_X[domains])[:, 1]
+
+                        # on the whole validation set
+                        '''pred, pred_prob = model.predict(test_X[domains]), model.predict_proba(test_X[domains])[:, 1]
                         # TODO: for each split, the predictions should be made on the whole test set or the cross validation test set?
                         Eval = seed_evaluate_metric(test_y, pred, pred_prob, y_train, test_X['sampWeight'])
-                        df_eval.loc[len(df_eval), ] = [model, seed, cv_name, k, NOK, Eval['auc'], Eval['f1'], Eval['efron_r2'], Eval['ffc_r2']]
+                        df_eval.loc[len(df_eval), ] = [model, seed, cv_name, k, NOK, Eval['auc'], Eval['f1'], Eval['efron_r2'], Eval['ffc_r2']]'''
+
+                        # on the  cross validation test set
+                        pred, pred_prob = model.predict(test_X[domains]), model.predict_proba(test_X[domains])[:, 1]
+                        # TODO: for each split, the predictions should be made on the whole test set or the cross validation test set?
+                        Eval = Evaluate.evaluate_metric(test_y, pred, pred_prob, y_train, test_X['sampWeight'])
+                        df_eval.loc[len(df_eval),] = [model, seed, cv_name, k, NOK, Eval['auc'], Eval['f1'],
+                                                      Eval['efron_r2'], Eval['ffc_r2']]
