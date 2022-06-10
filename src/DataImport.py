@@ -3,35 +3,65 @@ import numpy as np
 import re
 
 
-def data_reader():
-    dfMort = pd.read_csv("/Users/valler/OneDrive - Nexus365/Replication/Python_hrsPsyMort_20190208.csv", index_col=0)
+def data_reader(bio):
+    if bio == True:
+        dfMort = pd.read_csv('Bio_data/bio_all_raw_columns_no_missing.csv')
+    else:
+        dfMort = pd.read_csv("/Users/valler/OneDrive - Nexus365/Replication/Python_hrsPsyMort_20190208.csv", index_col=0)
     dfMort['ZincomeT'] = np.where(dfMort['Zincome'] >= 1.80427, 1.80427, dfMort['Zincome'])
     dfMort['ZwealthT'] = np.where(dfMort['Zwealth'] >= 3.49577, 3.49577, dfMort['Zwealth'])
+
+    return dfMort
+
+
+def data_reader_by_us(bio):
+    if bio == True:
+        dfMort = pd.read_csv('Bio_data/df_by_us_bio.csv')
+        dfMort['eversmokeYN'] = dfMort['eversmokeYN'] * -1
+        dfMort.rename(columns={'deathYN':'death'},inplace=True)
+
+        # dfMort['ZincomeT'] = np.where(dfMort['Zincome'] >= 1.80427, 1.80427, dfMort['Zincome'])
+        # dfMort['ZwealthT'] = np.where(dfMort['Zwealth'] >= 3.49577, 3.49577, dfMort['Zwealth'])
+
+    else:
+
+        dfMort = pd.read_csv('/Users/valler/Python/OX_Thesis/OX_thesis/data_preprocess/Data/merge_data_selected_author_rows_no_missing_versioin_3.csv')
+        dfMort['eversmokeYN'] = dfMort['eversmokeYN']*-1
+        dfMort['everfoodinsec'] = dfMort['everfoodinsec']
+
+    dfMort.rename(columns={'deathYear': 'death_year', 'deathMonth': 'death_month'}, inplace=True)
+    dfMort['death'].replace({np.nan: 0}, inplace=True)
+    dfMort['deathYR'] = dfMort['death_year'] + dfMort['death_month'] / 12
+    dfMort = dfMort.loc[dfMort['age'] >= 52,]
+
+
     return dfMort
 
 
 def domain_dict():
-    domain_diction = {'demographic': ['maleYN', 'blackYN', 'hispanicYN', 'otherYN', 'migrantYN','age'],
+    domain_diction = {'demographic': ['maleYN', 'blackYN', 'hispanicYN', 'migrantYN','age'],
                       'child_adverse': ['sumCAE', 'fathersocc', 'Zfatherseduc', 'Zmotherseduc', 'fatherunemp',
                                         'relocate',
-                                        'finhelp', 'maleYN', 'blackYN', 'hispanicYN', 'otherYN', 'migrantYN'],
+                                        'finhelp', 'maleYN', 'blackYN', 'hispanicYN',  'migrantYN'],
                       'adult_SES': ['rocc', 'ZwealthT', 'ZincomeT', 'everrent', 'evermedicaid', 'everfoodstamp',
                                     'everunemployed', 'everfoodinsec', 'Zeduccat', 'Zrecentfindiff', 'Zneighsafety',
-                                    'Zneighcohesion', 'Zneighdisorder', 'maleYN', 'blackYN', 'hispanicYN', 'otherYN',
+                                    'Zneighcohesion', 'Zneighdisorder', 'maleYN', 'blackYN', 'hispanicYN', 
                                     'migrantYN'],
                       'behavioral': ['vigactivityYN', 'modactivityYN', 'alcoholYN', 'sleepYN', 'eversmokeYN',
-                                     'currsmokeYN', 'maleYN', 'blackYN', 'hispanicYN', 'otherYN', 'migrantYN'],
+                                     'currsmokeYN', 'maleYN', 'blackYN', 'hispanicYN',  'migrantYN'],
                       'adult_adverse': ['sumadultAE', 'Zmajdiscrim', 'Zdailydiscrim', 'maleYN', 'blackYN', 'hispanicYN',
-                                        'otherYN', 'migrantYN'],
+                                         'migrantYN'],
                       'social_connection': ['Znegchildren', 'Znegfamily', 'Znegfriends', 'Zposchildren', 'Zposfamily',
                                             'nevermarried', 'everdivorced', 'maleYN', 'blackYN', 'hispanicYN',
-                                            'otherYN',
+                                            
                                             'migrantYN'],
                       'psych': ['Zagreeableness', 'Zangerin', 'Zangerout', 'Zanxiety', 'Zconscientiousness',
                                 'Zcynhostility', 'Zextroversion', 'Zhopelessness', 'Zlifesatis', 'Zloneliness',
                                 'Znegaffect', 'Zneuroticism', 'Zopenness', 'Zoptimism', 'Zperceivedconstraints',
                                 'Zperceivedmastery', 'Zpessimism', 'Zposaffect', 'Zpurpose', 'Zreligiosity', 'maleYN',
-                                'blackYN', 'hispanicYN', 'otherYN', 'migrantYN'],
+                                'blackYN', 'hispanicYN',  'migrantYN'],
+                      'bio': ['A1C',  'HDL',  'TC', 'CYSC_IMP', 'CRP_IMP',  'BLVERSION', 'BIOWGTR'],
+                      'bio_adjusted': ['A1C_ADJ','HDL_ADJ','TC_ADJ', 'CYSC_ADJ', 'CRP_ADJ', 'BLVERSION', 'BIOWGTR'],
                       'all': ['age','rocc', 'fathersocc', 'Zfatherseduc', 'Zmotherseduc', 'fatherunemp', 'relocate',
                               'finhelp',
                               'sumCAE', 'ZwealthT', 'ZincomeT', 'everrent', 'evermedicaid', 'everfoodstamp',
@@ -46,8 +76,45 @@ def domain_dict():
                               'Zextroversion', 'Zhopelessness', 'Zlifesatis', 'Zloneliness', 'Znegaffect',
                               'Zneuroticism',
                               'Zopenness', 'Zoptimism', 'Zperceivedconstraints', 'Zperceivedmastery', 'Zpessimism',
-                              'Zposaffect', 'Zpurpose', 'Zreligiosity', 'maleYN', 'blackYN', 'hispanicYN', 'otherYN',
-                              'migrantYN']}
+                              'Zposaffect', 'Zpurpose', 'Zreligiosity', 'maleYN', 'blackYN', 'hispanicYN', 
+                              'migrantYN'],
+
+                      'all_bio': ['age', 'rocc', 'fathersocc', 'Zfatherseduc', 'Zmotherseduc', 'fatherunemp', 'relocate',
+                              'finhelp',
+                              'sumCAE', 'ZwealthT', 'ZincomeT', 'everrent', 'evermedicaid', 'everfoodstamp',
+                              'everunemployed', 'everfoodinsec', 'Zeduccat', 'Zrecentfindiff', 'Zneighsafety',
+                              'Zneighcohesion', 'Zneighdisorder', 'vigactivityYN', 'modactivityYN', 'alcoholYN',
+                              'sleepYN',
+                              'eversmokeYN', 'currsmokeYN', 'sumadultAE', 'Zmajdiscrim', 'Zdailydiscrim',
+                              'Znegchildren',
+                              'Znegfamily', 'Znegfriends', 'Zposchildren', 'Zposfamily', 'nevermarried', 'everdivorced',
+                              'Zagreeableness', 'Zangerin', 'Zangerout', 'Zanxiety', 'Zconscientiousness',
+                              'Zcynhostility',
+                              'Zextroversion', 'Zhopelessness', 'Zlifesatis', 'Zloneliness', 'Znegaffect',
+                              'Zneuroticism',
+                              'Zopenness', 'Zoptimism', 'Zperceivedconstraints', 'Zperceivedmastery', 'Zpessimism',
+                              'Zposaffect', 'Zpurpose', 'Zreligiosity', 'maleYN', 'blackYN', 'hispanicYN', 
+                              'migrantYN',
+                              'A1C', 'HDL', 'TC', 'CYSC_IMP', 'CRP_IMP', 'BLVERSION'],
+
+                      'all_bio_adjusted': ['age', 'rocc', 'fathersocc', 'Zfatherseduc', 'Zmotherseduc', 'fatherunemp', 'relocate',
+                              'finhelp',
+                              'sumCAE', 'ZwealthT', 'ZincomeT', 'everrent', 'evermedicaid', 'everfoodstamp',
+                              'everunemployed', 'everfoodinsec', 'Zeduccat', 'Zrecentfindiff', 'Zneighsafety',
+                              'Zneighcohesion', 'Zneighdisorder', 'vigactivityYN', 'modactivityYN', 'alcoholYN',
+                              'sleepYN',
+                              'eversmokeYN', 'currsmokeYN', 'sumadultAE', 'Zmajdiscrim', 'Zdailydiscrim',
+                              'Znegchildren',
+                              'Znegfamily', 'Znegfriends', 'Zposchildren', 'Zposfamily', 'nevermarried', 'everdivorced',
+                              'Zagreeableness', 'Zangerin', 'Zangerout', 'Zanxiety', 'Zconscientiousness',
+                              'Zcynhostility',
+                              'Zextroversion', 'Zhopelessness', 'Zlifesatis', 'Zloneliness', 'Znegaffect',
+                              'Zneuroticism',
+                              'Zopenness', 'Zoptimism', 'Zperceivedconstraints', 'Zperceivedmastery', 'Zpessimism',
+                              'Zposaffect', 'Zpurpose', 'Zreligiosity', 'maleYN', 'blackYN', 'hispanicYN', 
+                              'migrantYN',
+                               'A1C_ADJ','HDL_ADJ','TC_ADJ', 'CYSC_ADJ', 'CRP_ADJ', 'BLVERSION']
+                      }
     return domain_diction
 
 
@@ -115,7 +182,37 @@ def variable_dict():
                 "Zpessimism": "Pessimism",
                 "Zposaffect": "Lower Positive Affectivity",
                 "Zpurpose": "Lower Purpose in Life",
-                "Zreligiosity": "Lower Religiosity"
+                "Zreligiosity": "Lower Religiosity",
+                'A1C':'HbA1c',
+                'A1C_ADJ':'HbA1c',
+                'HDL':"HDL",
+                'HDL_ADJ':"HDL",
+                'TC': "Total Cholesterol",
+                'TC_ADJ' : "Total Cholesterol",
+                'CYSC_IMP': "Cystatin C",
+                'CYSC_ADJ': "Cystatin C",
+                'CRP_IMP': "CRP",
+                'CRP_ADJ': "CRP",
+                'BLVERSION': "Bio Collected Version",
+                'BIOWGTR': "Bio Weights"
                 }
     return var_dict
 
+
+'''
+# bio match
+df_bio = pd.read_csv('/Users/valler/Python/OX_Thesis/OX_thesis/Bio_data/bio_all.csv',index_col=0)
+bio_columns = list(df_bio.columns)
+bio_columns.remove('hhidpn')
+df_by_us=data_reader_by_us(bio=False)
+
+
+for index,row in df_bio.iterrows():
+    hhidpn=float(row['hhidpn'])
+    if hhidpn in list(df_by_us.hhidpn):
+        for column in bio_columns:
+            df_by_us.loc[df_by_us['hhidpn']==hhidpn,column] = row[column]
+            
+df_by_us.to_csv('/Users/valler/Python/OX_Thesis/OX_thesis/Bio_data/df_by_us_bio.csv',index=False)
+
+'''

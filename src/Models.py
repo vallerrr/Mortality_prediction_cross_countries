@@ -28,17 +28,21 @@ def polynominal(df, order):
 
 
 class Model_fixed_test_size():
-    def __init__(self, data, test_size, domain_list, model, train_subset_size, order):
+    def __init__(self, data, test_size, domain_list, model, train_subset_size, order,y_colname):
         super(Model_fixed_test_size, self).__init__()
         # train test split
-        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(data.drop('death', axis=1),
-                                                                                data['death'], test_size=test_size, random_state=2021)
-        self.X_train = self.X_train.sample(n=int(train_subset_size * len(self.X_train)), random_state=2021)
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(data.drop(y_colname, axis=1),
+                                                                                data[y_colname], test_size=test_size, random_state=4)
+        self.X_train = self.X_train.sample(n=int(train_subset_size * len(self.X_train)), random_state=4)
 
         self.y_train = self.y_train.loc[self.X_train.index]
+        if 'sampWeight' in list(self.X_train.columns):
+            self.samp_weight_control = True
+            self.train_sample_weight = self.X_train['sampWeight']
+            self.test_sample_weight = self.X_test['sampWeight']
 
-        self.train_sample_weight = self.X_train['sampWeight']
-        self.test_sample_weight = self.X_test['sampWeight']
+        else:
+            self.samp_weight_control = False
         self.X_train = self.X_train[domain_list]
         self.X_test = self.X_test[domain_list]
 
@@ -50,25 +54,50 @@ class Model_fixed_test_size():
 
         #  print('Train set number {}'.format(self.X_train.shape))
         if model == 'lgb':
-            self.model = LGB.LGBMClassifier()
-            self.model.fit(X=self.X_train,
-                           y=self.y_train,
-                           sample_weight=self.train_sample_weight)
-            self.train_set_predict = self.model.predict(self.X_train)
-            self.train_set_predict_prob = self.model.predict_proba(self.X_train)[:,1]
+            if self.samp_weight_control:
+                self.model = LGB.LGBMClassifier()
+                self.model.fit(X=self.X_train,
+                               y=self.y_train,
+                               sample_weight=self.train_sample_weight)
+                print('test')
+                self.train_set_predict = self.model.predict(self.X_train)
+                self.train_set_predict_prob = self.model.predict_proba(self.X_train)[:, 1]
 
-            self.test_set_predict = self.model.predict(self.X_test)
-            self.test_set_predict_prob = self.model.predict_proba(self.X_test)[:,1]
+                self.test_set_predict = self.model.predict(self.X_test)
+                self.test_set_predict_prob = self.model.predict_proba(self.X_test)[:, 1]
+
+            else:
+                #print('no SampWeight')
+                self.model = LGB.LGBMClassifier()
+                self.model.fit(X=self.X_train,
+                               y=self.y_train)
+                #print('test')
+                self.train_set_predict = self.model.predict(self.X_train)
+                self.train_set_predict_prob = self.model.predict_proba(self.X_train)[:,1]
+
+                self.test_set_predict = self.model.predict(self.X_test)
+                self.test_set_predict_prob = self.model.predict_proba(self.X_test)[:,1]
 
         if model == 'xgb':
-            self.model = XGB.XGBClassifier(eval_metric='mlogloss', use_label_encoder=False)
-            self.model.fit(X=self.X_train,
-                           y=self.y_train,
-                           sample_weight=self.train_sample_weight)
-            self.train_set_predict = self.model.predict(self.X_train)
-            self.train_set_predict_prob = self.model.predict_proba(self.X_train)[:, 1]
-            self.test_set_predict = self.model.predict(self.X_test)
-            self.test_set_predict_prob = self.model.predict_proba(self.X_test)[:, 1]
+            if self.samp_weight_control:
+                # print('with sample weight')
+                self.model = XGB.XGBClassifier(eval_metric='mlogloss', use_label_encoder=False)
+                self.model.fit(X=self.X_train,
+                               y=self.y_train,
+                               sample_weight=self.train_sample_weight)
+                self.train_set_predict = self.model.predict(self.X_train)
+                self.train_set_predict_prob = self.model.predict_proba(self.X_train)[:, 1]
+                self.test_set_predict = self.model.predict(self.X_test)
+                self.test_set_predict_prob = self.model.predict_proba(self.X_test)[:, 1]
+            else:
+                # print('without sample weight')
+                self.model = XGB.XGBClassifier(eval_metric='mlogloss', use_label_encoder=False)
+                self.model.fit(X=self.X_train,
+                               y=self.y_train)
+                self.train_set_predict = self.model.predict(self.X_train)
+                self.train_set_predict_prob = self.model.predict_proba(self.X_train)[:, 1]
+                self.test_set_predict = self.model.predict(self.X_test)
+                self.test_set_predict_prob = self.model.predict_proba(self.X_test)[:, 1]
 
         if model == 'logreg':
             self.model = LogisticRegression()
@@ -84,7 +113,7 @@ class Model_fixed_test_size():
             domain = list(
                 set(domain_list + ['age', 'death', 'sampWeight', 'hhid', 'maleYN', 'blackYN', 'hispanicYN', 'otherYN',
                                'migrantYN']))
-            self.X_train, self.X_test = train_test_split(data, test_size=test_size, random_state=2021)
+            self.X_train, self.X_test = train_test_split(data, test_size=test_size, random_state=4)
             self.X_train = self.X_train[domain]
             self.X_test = self.X_test[domain]
 
@@ -98,7 +127,7 @@ class Model_non_fixed_test_size:
         super(Model_non_fixed_test_size, self).__init__()
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(data.drop('death', axis=1),
                                                                                 data['death'], test_size=test_size,
-                                                                                random_state=2021)
+                                                                                random_state=4)
         self.train_sample_weight = self.X_train['sampWeight']
         self.test_sample_weight = self.X_test['sampWeight']
         self.X_train = self.X_train[domains]
@@ -134,7 +163,7 @@ class Model_non_fixed_test_size:
             domain = list(
                 set(domains + ['age', 'death', 'sampWeight', 'hhid', 'maleYN', 'blackYN', 'hispanicYN', 'otherYN',
                                'migrantYN']))
-            self.X_train, self.X_test = train_test_split(data, test_size=test_size, random_state=2021)
+            self.X_train, self.X_test = train_test_split(data, test_size=test_size, random_state=4)
             self.X_train = self.X_train[domain]
             self.X_test = self.X_test[domain]
 
@@ -144,7 +173,7 @@ class Model_non_fixed_test_size:
 
 
 
-# lgb = Model_fixed_test_size(df, 0.2, domains, 'lgb', 1)
+
 
 # Logistic regression store coefficcient
 def store_coef(count, k, model_name, seed, model, domains, df_coef,cv_name):

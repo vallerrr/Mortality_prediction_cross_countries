@@ -60,7 +60,7 @@ def model_fit_and_store_result(df, goal_domain, group_number, test_size, domain_
     return model_eval
 
 
-# Data Import and Initialization -----------------------------------------
+# Bio_data Import and Initialization -----------------------------------------
 test_size = 0.3
 df = DataImport.data_reader()
 domains = DataImport.domain_dict()

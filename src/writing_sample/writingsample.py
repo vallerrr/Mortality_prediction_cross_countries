@@ -143,7 +143,7 @@ ax.tick_params(axis='both', which='major', labelsize=fontsize_ticks)
 ax.set_ylabel('Input Factors', fontsize=fontsize_labels)
 ax.set_xlabel('mean(|SHAP Value|)', fontsize=fontsize_labels)
 plt.show()
-#plt.savefig('mean_shap_all.pdf')
+#plt.savefig('mean_shap_top10.pdf')
 # end here
 
 
