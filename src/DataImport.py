@@ -3,9 +3,10 @@ import numpy as np
 import re
 
 
+file_path = "/Users/valler/Python/OX_Thesis/OX_thesis/Data/HRS/"
 def data_reader(bio):
     if bio == True:
-        dfMort = pd.read_csv('Bio_data/bio_all_raw_columns_no_missing.csv')
+        dfMort = pd.read_csv(file_path+'Bio_data/bio_all_raw_columns_no_missing.csv')
     else:
         dfMort = pd.read_csv("/Users/valler/OneDrive - Nexus365/Replication/Python_hrsPsyMort_20190208.csv", index_col=0)
     dfMort['ZincomeT'] = np.where(dfMort['Zincome'] >= 1.80427, 1.80427, dfMort['Zincome'])
@@ -16,7 +17,7 @@ def data_reader(bio):
 
 def data_reader_by_us(bio):
     if bio == True:
-        dfMort = pd.read_csv('Bio_data/df_by_us_bio.csv')
+        dfMort = pd.read_csv(file_path+'Bio_data/df_by_us_bio.csv')
         dfMort['eversmokeYN'] = dfMort['eversmokeYN'] * -1
         dfMort.rename(columns={'deathYN':'death'},inplace=True)
 
@@ -25,7 +26,7 @@ def data_reader_by_us(bio):
 
     else:
 
-        dfMort = pd.read_csv('/Users/valler/Python/OX_Thesis/OX_thesis/data_preprocess/Data/merge_data_selected_author_rows_no_missing_versioin_3.csv')
+        dfMort = pd.read_csv(file_path+'data_preprocess/Data/merge_data_selected_author_rows_no_missing_versioin_3.csv')
         dfMort['eversmokeYN'] = dfMort['eversmokeYN']*-1
         dfMort['everfoodinsec'] = dfMort['everfoodinsec']
 

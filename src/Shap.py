@@ -24,9 +24,6 @@ def model_performance(data, test_size,domain_list):
                                          domain_list=domain_list, model='xgb',
                                       train_subset_size=1, order=0,y_colname='death')
 
-
-
-
     evas=Evaluate.metric(model)
     pr_f1=evas.pr_f1
     pr_auc=evas.pr_auc
@@ -163,7 +160,6 @@ for (m, n), subplot in np.ndenumerate(axis):
 
 # plt.show()
 # plt.savefig(Path.cwd()/'graphs/contious_shap.pdf')
-
 
 
 
