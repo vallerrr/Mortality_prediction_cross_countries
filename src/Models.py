@@ -81,7 +81,7 @@ class Model_fixed_test_size():
         if model == 'xgb':
             if self.samp_weight_control:
                 # print('with sample weight')
-                self.model = XGB.XGBClassifier(eval_metric='mlogloss', use_label_encoder=False)
+                self.model = XGB.XGBClassifier(eval_metric='mlogloss')
                 self.model.fit(X=self.X_train,
                                y=self.y_train,
                                sample_weight=self.train_sample_weight)
@@ -91,7 +91,7 @@ class Model_fixed_test_size():
                 self.test_set_predict_prob = self.model.predict_proba(self.X_test)[:, 1]
             else:
                 # print('without sample weight')
-                self.model = XGB.XGBClassifier(eval_metric='mlogloss', use_label_encoder=False)
+                self.model = XGB.XGBClassifier(eval_metric='mlogloss')
                 self.model.fit(X=self.X_train,
                                y=self.y_train)
                 self.train_set_predict = self.model.predict(self.X_train)
