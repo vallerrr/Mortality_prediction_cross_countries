@@ -1,2 +1,5 @@
 .DS_Store
 /Data/
+*.pyc
+data_preprocess_src/vars_found_in_raw/SHARE.csv
+src/temp.ipynb
