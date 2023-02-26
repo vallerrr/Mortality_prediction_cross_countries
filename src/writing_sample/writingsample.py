@@ -8,7 +8,7 @@ from sklearn.metrics import f1_score, precision_recall_curve, auc, roc_auc_score
 from sklearn.model_selection import StratifiedKFold, cross_val_score
 from src import Evaluate
 test_size = 0.3
-df = DataImport.data_reader()
+df = DataImport.data_reader(bio=False)
 domains = DataImport.domain_dict()
 var_dict = DataImport.variable_dict()
 
@@ -44,7 +44,7 @@ df['Zconscientiousness'].describe()
 
 
 model = Models.Model_fixed_test_size(data=df, test_size=test_size, domain_list=domains['all'], model='xgb',
-                                      train_subset_size=1, order=0)
+                                      train_subset_size=1, order=0,y_colname='death')
 
 
 xgb_test = xgboost.DMatrix(model.X_test, label=model.y_test)
@@ -61,9 +61,6 @@ brier = Evaluate.brier(model.y_test,model.test_set_predict_prob)
 # roc
 roc_no_skill = 0.5
 auc_score = roc_auc_score(y_test, pred_prob, sample_weight=sample_weight)
-
-
-model.model
 
 print('f1 is {}, pr_auc is {}, pr_no_skill is {}, roc_auc is {}'.format(pr_f1,pr_auc,pr_no_skill,auc_score))
 
@@ -117,7 +114,7 @@ ax.tick_params(axis='both', which='major', labelsize=fontsize_ticks)
 ax.set_yticklabels(ylabels)
 
 #plt.show()
-plt.savefig('summary_shap.pdf')
+#plt.savefig('summary_shap.pdf')
 # end here
 
 

@@ -94,9 +94,6 @@ for seed in np.arange(seed_min_included, seed_max_not_included, 1):
 
                         df_coef = store_coef(count, k, model_name, seed, model, domains, df_coef, cv_name)
 
-
-
-
                     # store coefficients
 
 

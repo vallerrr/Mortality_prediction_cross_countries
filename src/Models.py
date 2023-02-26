@@ -3,15 +3,19 @@ from src import DataImport
 from src import Evaluate
 import numpy as np
 import xgboost as XGB
-import lightgbm as LGB
-
-from lifelines import CoxPHFitter
+import sys
+if sys.version=='3.7.16 (default, Jan 17 2023, 09:28:58) \n[Clang 14.0.6 ]':
+    lightgbm=''
+    CoxPHFitter=''
+else:
+    import lightgbm as LGB
+    from lifelines import CoxPHFitter
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
 from sklearn.metrics import confusion_matrix
 import sklearn.metrics as metrics
 
-
+random_state = 4
 # domain 1 : demographic
 ## 1.1 forecast death
 
@@ -32,8 +36,8 @@ class Model_fixed_test_size():
         super(Model_fixed_test_size, self).__init__()
         # train test split
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(data.drop(y_colname, axis=1),
-                                                                                data[y_colname], test_size=test_size, random_state=4)
-        self.X_train = self.X_train.sample(n=int(train_subset_size * len(self.X_train)), random_state=4)
+                                                                                data[y_colname], test_size=test_size, random_state=random_state)
+        self.X_train = self.X_train.sample(n=int(train_subset_size * len(self.X_train)), random_state=random_state)
 
         self.y_train = self.y_train.loc[self.X_train.index]
         if 'sampWeight' in list(self.X_train.columns):
@@ -81,7 +85,7 @@ class Model_fixed_test_size():
         if model == 'xgb':
             if self.samp_weight_control:
                 # print('with sample weight')
-                self.model = XGB.XGBClassifier(eval_metric='mlogloss')
+                self.model = XGB.XGBClassifier()#,use_label_encoder=False
                 self.model.fit(X=self.X_train,
                                y=self.y_train,
                                sample_weight=self.train_sample_weight)
@@ -91,7 +95,7 @@ class Model_fixed_test_size():
                 self.test_set_predict_prob = self.model.predict_proba(self.X_test)[:, 1]
             else:
                 # print('without sample weight')
-                self.model = XGB.XGBClassifier(eval_metric='mlogloss')
+                self.model = XGB.XGBClassifier()#,use_label_encoder=False)
                 self.model.fit(X=self.X_train,
                                y=self.y_train)
                 self.train_set_predict = self.model.predict(self.X_train)
@@ -113,7 +117,7 @@ class Model_fixed_test_size():
             domain = list(
                 set(domain_list + ['age', 'death', 'sampWeight', 'hhid', 'maleYN', 'blackYN', 'hispanicYN', 'otherYN',
                                'migrantYN']))
-            self.X_train, self.X_test = train_test_split(data, test_size=test_size, random_state=4)
+            self.X_train, self.X_test = train_test_split(data, test_size=test_size, random_state=random_state)
             self.X_train = self.X_train[domain]
             self.X_test = self.X_test[domain]
 
@@ -127,7 +131,7 @@ class Model_non_fixed_test_size:
         super(Model_non_fixed_test_size, self).__init__()
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(data.drop('death', axis=1),
                                                                                 data['death'], test_size=test_size,
-                                                                                random_state=4)
+                                                                                random_state=random_state)
         self.train_sample_weight = self.X_train['sampWeight']
         self.test_sample_weight = self.X_test['sampWeight']
         self.X_train = self.X_train[domains]
@@ -163,7 +167,7 @@ class Model_non_fixed_test_size:
             domain = list(
                 set(domains + ['age', 'death', 'sampWeight', 'hhid', 'maleYN', 'blackYN', 'hispanicYN', 'otherYN',
                                'migrantYN']))
-            self.X_train, self.X_test = train_test_split(data, test_size=test_size, random_state=4)
+            self.X_train, self.X_test = train_test_split(data, test_size=test_size, random_state=random_state)
             self.X_train = self.X_train[domain]
             self.X_test = self.X_test[domain]
 

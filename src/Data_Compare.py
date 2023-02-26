@@ -5,41 +5,33 @@ from src import Models
 from src import Evaluate
 from src import DataImport
 import matplotlib.pyplot as plt
-import lightgbm as LGB
-from sklearn.model_selection import train_test_split
+
 
 df = DataImport.data_reader(bio=False)
 df_bio = DataImport.data_reader(bio=True)
 domains = DataImport.domain_dict()
-df_by_us=DataImport.data_reader_by_us(bio=False)
+df_by_us = DataImport.data_reader_by_us(bio=False)
 df_by_us_bio = DataImport.data_reader_by_us(bio=True)
 
-model = 'lgb'
+model_name = 'xgb'
 # non-bio
 # note that if you want to run the lgb model, you have to change the kernel to nlp
 df.drop(columns=['sampWeight'], inplace=True)
-model = Models.Model_fixed_test_size(data=df, test_size=0.3, domain_list=domains['all'],model=model,train_subset_size=1,order=0, y_colname='death')
+
+model = Models.Model_fixed_test_size(data=df, test_size=0.3, domain_list=domains['all'], model=model_name,train_subset_size=1,order=0, y_colname='death')
+
 evaluate = Evaluate.metric(model=model)
 
-model_2 = Models.Model_fixed_test_size(data=df_by_us, test_size=0.3, domain_list=domains['all'],model=model,train_subset_size=1,order=0, y_colname='death')
+model_2 = Models.Model_fixed_test_size(data=df_by_us, test_size=0.3, domain_list=domains['all'], model=model_name,train_subset_size=1,order=0, y_colname='death')
 evaluate_2 = Evaluate.metric(model=model_2)
 
 
 # bio
-
-model_2 = Models.Model_fixed_test_size(data=df_by_us_bio, test_size=0.3, domain_list=domains['all_bio'],model=model,train_subset_size=1,order=0, y_colname='death')
+model_2 = Models.Model_fixed_test_size(data=df_by_us_bio, test_size=0.3, domain_list=domains['all_bio'], model=model_name,train_subset_size=1,order=0, y_colname='death')
 evaluate_2 = Evaluate.metric(model=model_2)
 
-
-model_3 = Models.Model_fixed_test_size(data=df_by_us_bio, test_size=0.3, domain_list=domains['all'],model=model,train_subset_size=1,order=0, y_colname='death')
+model_3 = Models.Model_fixed_test_size(data=df_by_us_bio, test_size=0.3, domain_list=domains['all'], model=model_name,train_subset_size=1,order=0, y_colname='death')
 evaluate_3 = Evaluate.metric(model=model_3)
-
-
-
-
-
-
-
 
 # exam the columns that we are interested
 def compare_column(column,df,df_by_us):
@@ -64,9 +56,7 @@ def compare_column(column,df,df_by_us):
 
 
     print(compare['equal'].sum(),12982-compare['equal'].sum())
-    return  compare
-
-
+    return compare
 
 
 
@@ -190,7 +180,7 @@ ax3_1.tick_params(axis='both', which='major', labelsize=fontsize_ticks)
 
 fig.tight_layout()
 # Show the graph
-plt.savefig(Path.cwd()/'graphs/fig1_death_timeline.pdf')
+# plt.savefig(Path.cwd()/'graphs/fig1_death_timeline.pdf')
 plt.show()
 
 

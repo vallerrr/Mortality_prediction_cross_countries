@@ -16,6 +16,7 @@ def data_reader(bio):
 
 
 def data_reader_by_us(bio):
+    binary_treat_control = True
     if bio == True:
         dfMort = pd.read_csv(file_path+'Bio_data/df_by_us_bio.csv')
         dfMort['eversmokeYN'] = dfMort['eversmokeYN'] * -1
@@ -28,13 +29,16 @@ def data_reader_by_us(bio):
 
         dfMort = pd.read_csv(file_path+'data_preprocess/Data/merge_data_selected_author_rows_no_missing_versioin_3.csv')
         dfMort['eversmokeYN'] = dfMort['eversmokeYN']*-1
-        dfMort['everfoodinsec'] = dfMort['everfoodinsec']
+
+    if binary_treat_control:
+        binary_columns = [x for x in dfMort.columns if 'YN' in x]
+        for column in binary_columns:
+            dfMort[column] = [1 if x >=0 else -1 for x in dfMort[column]]
 
     dfMort.rename(columns={'deathYear': 'death_year', 'deathMonth': 'death_month'}, inplace=True)
-    dfMort['death'].replace({np.nan: 0}, inplace=True)
+    # dfMort['death'].replace({np.nan: 0}, inplace=True)
     dfMort['deathYR'] = dfMort['death_year'] + dfMort['death_month'] / 12
-    dfMort = dfMort.loc[dfMort['age'] >= 52,]
-
+    # dfMort = dfMort.loc[dfMort['age'] >= 52,]
 
     return dfMort
 
@@ -200,6 +204,26 @@ def variable_dict():
     return var_dict
 
 
+def recode_categorical_vars(column, cat_num, df):
+    # pair of values and their number of observations
+    cat_val_count_lst = []
+    count = 0
+    for index, value in df[column].value_counts().items():
+        count += 1
+        if count >= cat_num + 1:
+            break
+        else:
+            # print(index,value)
+            cat_val_count_lst.append([index, value])
+    # cut off calculation
+    cut_point = {}
+    for index in range(0, cat_num - 1):
+        cat_diff = cat_val_count_lst[index + 1][0] - cat_val_count_lst[index][0]
+        gravity = cat_val_count_lst[index][1] / (cat_val_count_lst[index][1] + cat_val_count_lst[index + 1][1])
+        cut_point[cat_val_count_lst[index][0]] = cat_val_count_lst[index][0] + gravity * cat_diff
+    # cut bins
+    df[column] = pd.cut(df[column], bins=[cats[0] - 100] + cats + [cats[len(cats) - 1] + 100], labels=[x[0] for x in cat_val_count_lst])
+    return df
 '''
 # bio match
 df_bio = pd.read_csv('/Users/valler/Python/OX_Thesis/OX_thesis/Bio_data/bio_all.csv',index_col=0)
