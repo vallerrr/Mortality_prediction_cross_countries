@@ -6,7 +6,7 @@ import re
 file_path = "/Users/valler/Python/OX_Thesis/OX_thesis/Data/HRS/"
 def data_reader(bio):
     if bio == True:
-        dfMort = pd.read_csv(file_path+'Bio_data/bio_all_raw_columns_no_missing.csv')
+        dfMort = pd.read_csv(file_path+'model_used_data/bio_all_raw_columns_no_missing.csv')
     else:
         dfMort = pd.read_csv("/Users/valler/OneDrive - Nexus365/Replication/Python_hrsPsyMort_20190208.csv", index_col=0)
     dfMort['ZincomeT'] = np.where(dfMort['Zincome'] >= 1.80427, 1.80427, dfMort['Zincome'])
@@ -16,30 +16,23 @@ def data_reader(bio):
 
 
 def data_reader_by_us(bio):
-    binary_treat_control = True
+    binary_treat_control = False
     if bio == True:
-        dfMort = pd.read_csv(file_path+'Bio_data/df_by_us_bio.csv')
+        dfMort = pd.read_csv(file_path+'model_used_data/df_by_us_bio.csv')
         dfMort['eversmokeYN'] = dfMort['eversmokeYN'] * -1
-        dfMort.rename(columns={'deathYN':'death'},inplace=True)
+        dfMort.rename(columns={'deathYN':'death'}, inplace=True)
 
         # dfMort['ZincomeT'] = np.where(dfMort['Zincome'] >= 1.80427, 1.80427, dfMort['Zincome'])
         # dfMort['ZwealthT'] = np.where(dfMort['Zwealth'] >= 3.49577, 3.49577, dfMort['Zwealth'])
 
     else:
 
-        dfMort = pd.read_csv(file_path+'data_preprocess/Data/merge_data_selected_author_rows_no_missing_versioin_3.csv')
-        dfMort['eversmokeYN'] = dfMort['eversmokeYN']*-1
+        # dfMort = pd.read_csv(file_path+'data_preprocess/Data/merge_data_selected_author_rows_no_missing_versioin_3.csv')
+        dfMort = pd.read_csv(file_path+'model_used_data/df_by_us.csv')
 
-    if binary_treat_control:
-        binary_columns = [x for x in dfMort.columns if 'YN' in x]
-        for column in binary_columns:
-            dfMort[column] = [1 if x >=0 else -1 for x in dfMort[column]]
 
     dfMort.rename(columns={'deathYear': 'death_year', 'deathMonth': 'death_month'}, inplace=True)
-    # dfMort['death'].replace({np.nan: 0}, inplace=True)
     dfMort['deathYR'] = dfMort['death_year'] + dfMort['death_month'] / 12
-    # dfMort = dfMort.loc[dfMort['age'] >= 52,]
-
     return dfMort
 
 
@@ -226,7 +219,7 @@ def recode_categorical_vars(column, cat_num, df):
     return df
 '''
 # bio match
-df_bio = pd.read_csv('/Users/valler/Python/OX_Thesis/OX_thesis/Bio_data/bio_all.csv',index_col=0)
+df_bio = pd.read_csv('/Users/valler/Python/OX_Thesis/OX_thesis/model_used_data/bio_all.csv',index_col=0)
 bio_columns = list(df_bio.columns)
 bio_columns.remove('hhidpn')
 df_by_us=data_reader_by_us(bio=False)
@@ -238,6 +231,6 @@ for index,row in df_bio.iterrows():
         for column in bio_columns:
             df_by_us.loc[df_by_us['hhidpn']==hhidpn,column] = row[column]
             
-df_by_us.to_csv('/Users/valler/Python/OX_Thesis/OX_thesis/Bio_data/df_by_us_bio.csv',index=False)
+df_by_us.to_csv('/Users/valler/Python/OX_Thesis/OX_thesis/model_used_data/df_by_us_bio.csv',index=False)
 
 '''

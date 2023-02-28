@@ -15,7 +15,7 @@ from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
 from sklearn.metrics import confusion_matrix
 import sklearn.metrics as metrics
 
-random_state = 4
+
 # domain 1 : demographic
 ## 1.1 forecast death
 
@@ -32,9 +32,10 @@ def polynominal(df, order):
 
 
 class Model_fixed_test_size():
-    def __init__(self, data, test_size, domain_list, model, train_subset_size, order,y_colname):
+    def __init__(self, data, test_size, domain_list, model, train_subset_size, order,y_colname,random_state = 4):
         super(Model_fixed_test_size, self).__init__()
         # train test split
+        print(f'seed is {random_state}')
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(data.drop(y_colname, axis=1),
                                                                                 data[y_colname], test_size=test_size, random_state=random_state)
         self.X_train = self.X_train.sample(n=int(train_subset_size * len(self.X_train)), random_state=random_state)
@@ -190,41 +191,3 @@ def store_coef(count, k, model_name, seed, model, domains, df_coef,cv_name):
     df_coef.loc[len(df_coef),] = temp.loc[0, ]
     return df_coef
 
-'''
-test = Model(df, 0.4, domains, 'cox')
-test.model.hazard_ratios_
-
-test.model.confidence_intervals_
-test.model.predict_partial_hazard(test.X_valid)
-test.model.predict_cumulative_hazard(test.X_valid)
-test.model.predict_survival_function(test.X_valid)
-test.model.predict_expectation(test.X_valid)
-
-def test_size_enumerate(range_start, range_end, step, columns):
-    df = pd.DataFrame(columns=columns)
-    model =
-'''
-
-'''
-
-## 1.2 forecast time
-temp = df[df['death'] == 1]  # only leave samples died
-X_train, X_valid, y_train, y_valid = train_test_split(temp.drop('time', axis=1), temp['time'], test_size=0.2,
-                                                      random_state=2021)
-domain_list = domain_dict['demographic']
-
-lgb_r = LGB.LGBMRegressor()
-lgb_r.fit(X=X_train[domain_list],
-          y=y_train, sample_weight=X_train['sampWeight'])
-
-
-res = pd.DataFrame()
-pred = pd.DataFrame()
-res['pred'] = lgb_r.predict(X_train[domain_list]).T
-res['true'] = list(y_train)
-pred['pred'] = lgb_r.predict(X=X_valid[domain_list]).T
-pred['true'] = list(y_valid)
-
-metrics.r2_score(res['true'], res['pred'], X_train['sampWeight'])
-metrics.r2_score(pred['true'], pred['pred'])
-'''

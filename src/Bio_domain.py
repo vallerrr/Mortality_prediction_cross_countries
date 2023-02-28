@@ -88,7 +88,7 @@ bio_08=bio_08.rename(columns=bio_08_col_dict)
 #bio_08.columns
 
 bio = pd.concat([bio_08,bio_06],axis=0)
-# bio.to_csv(Path.cwd()/'Bio_data/bio_all.csv')
+# bio.to_csv(Path.cwd()/'model_used_data/bio_all.csv')
 #columns: 'A1C', 'A1C_ADJ', 'HDL', 'HDL_ADJ', 'TC', 'TC_ADJ',
 #'CYSC_IMP', 'CYSC_ADJ', 'CRP_IMP', 'CRP_ADJ', 'BLVERSION', 'BIOWGTR'
 
@@ -103,7 +103,7 @@ column_difference = list(set(combined_08.columns)-set(combined_06.columns))
 bio_all_raw = pd.concat([combined_08, combined_06], axis=0)
 
 
-# bio_all_raw.to_csv(Path.cwd()/'Bio_data/bio_all_with_df_raw.csv')
+# bio_all_raw.to_csv(Path.cwd()/'model_used_data/bio_all_with_df_raw.csv')
 
 print('bio_all_raw has {} rows and df has {} rows'.format(len(bio_all_raw),len(df)))
 
@@ -134,10 +134,10 @@ while 0 in bio_all_raw_columns:
     bio_all_raw_columns.remove(0)
 
 bio_all_raw_columns_no_deaths = bio_all_raw[bio_all_raw_columns]
-# bio_all_raw_columns_no_deaths.to_csv(Path.cwd()/'Bio_data/bio_all_raw_columns_no_deaths.csv')
+# bio_all_raw_columns_no_deaths.to_csv(Path.cwd()/'model_used_data/bio_all_raw_columns_no_deaths.csv')
 random.seed(2022)
 
-bio_all_raw_columns_no_deaths=pd.read_csv(Path.cwd()/'Bio_data/bio_all_raw_columns_no_deaths.csv',index_col=0)
+bio_all_raw_columns_no_deaths=pd.read_csv(Path.cwd()/'model_used_data/bio_all_raw_columns_no_deaths.csv',index_col=0)
 imputer = MissForest(n_estimators=500, max_iter=5)
 bio_all_raw_columns_no_deaths_no_missing = imputer.fit_transform(bio_all_raw_columns_no_deaths)
 # missing values are computed at BMRC
@@ -150,7 +150,7 @@ no_missing = pd.DataFrame(data=bio_all_raw_columns_no_deaths_no_missing, columns
 # computation method 2
 
 no_missing[['death','death_year','deathYR','death_month','deathReason']]=df[['death','death_year','deathYR','death_month','deathReason']]
-no_missing.to_csv(Path.cwd()/'Bio_data/df_by_us_bio.csv',index=False)
+no_missing.to_csv(Path.cwd()/'model_used_data/df_by_us_bio.csv',index=False)
 
 
 
