@@ -73,9 +73,9 @@ temp = np.arange(0.3, 1.005, 0.005)
 Eva_fixed_test_size = asymptotics(model_set=model_set, start=0.3, end=1.005, step=0.005, domains=domains)
 # Eva_fixed_test_size_new = asymptotics(model_set=model_set, start=0.9, end=1, step=0.005, domains=domains)
 # auc score
-# Eva_fixed_test_size.to_csv(Path.cwd()/'result_csv/asymptotics_lgb.csv')
+# Eva_fixed_test_size.to_csv(Path.cwd()/'results/asymptotics_lgb.csv')
 
-# Eva_fixed_test_size=pd.read_csv(Path.cwd()/'result_csv/asymptotics_lgb.csv',index_col=0)
+# Eva_fixed_test_size=pd.read_csv(Path.cwd()/'results/asymptotics_lgb.csv',index_col=0)
 columns = []
 for column in Eva_fixed_test_size.columns:
     if 'test' in column:

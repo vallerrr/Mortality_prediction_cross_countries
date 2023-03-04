@@ -30,7 +30,7 @@ def data_reader_by_us(bio):
         # dfMort = pd.read_csv(file_path+'data_preprocess/Data/merge_data_selected_author_rows_no_missing_versioin_3.csv')
         dfMort = pd.read_csv(file_path+'model_used_data/df_by_us.csv')
 
-
+    dfMort = dfMort.loc[dfMort['age'] >= 50,]
     dfMort.rename(columns={'deathYear': 'death_year', 'deathMonth': 'death_month'}, inplace=True)
     dfMort['deathYR'] = dfMort['death_year'] + dfMort['death_month'] / 12
     return dfMort

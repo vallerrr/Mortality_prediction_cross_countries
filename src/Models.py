@@ -110,9 +110,9 @@ class Model_fixed_test_size():
                            y=self.y_train,
                            sample_weight=self.train_sample_weight)
             self.train_set_predict = self.model.predict(self.X_train)
-            self.train_set_predict_prob = self.model.predict(self.X_train)[:,1]
+            self.train_set_predict_prob = self.model.predict(self.X_train)[:, 1]
             self.test_set_predict = self.model.predict(self.X_test)
-            self.test_set_predict_prob = self.model.predict_proba(self.X_test)[:,1]
+            self.test_set_predict_prob = self.model.predict_proba(self.X_test)[:, 1]
 
         if model == 'cox':
             domain = list(

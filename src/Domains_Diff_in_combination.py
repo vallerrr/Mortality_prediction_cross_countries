@@ -172,12 +172,12 @@ replace_name_dict={'child_adverse':'Child-Adversity',
 
 
 
-#contribution.to_csv(Path.cwd()/'result_csv/domain_contribution_lgb.csv')
+#contribution.to_csv(Path.cwd()/'results/domain_contribution_lgb.csv')
 
-#contribution_xgb.to_csv(Path.cwd()/'result_csv/domain_contribution_xgb.csv')
+#contribution_xgb.to_csv(Path.cwd()/'results/domain_contribution_xgb.csv')
 
 
-contribution=pd.read_csv(Path.cwd()/'result_csv/domain_contribution_lgb.csv',index_col=0)
+contribution=pd.read_csv(Path.cwd()/'results/domain_contribution_lgb.csv',index_col=0)
 contribution_to_plt=contribution.copy()
 
 
