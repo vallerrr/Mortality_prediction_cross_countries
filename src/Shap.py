@@ -1,0 +1,214 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from src import Models
+import shap
+from src import params
+from datetime import datetime
+import xgboost
+from pathlib import Path
+from sklearn.model_selection import StratifiedKFold, cross_val_score
+from src import Evaluate
+
+
+
+
+def shap_dict(shap_values_test):
+    """
+    store the mean absolute shap value for each variable in a dictionary
+    @param shap_values_test: the shap explainer
+    @return: shap_dict
+    """
+    #
+    if len(shap_values_test.shape)==3:
+        shap_values_test.values=shap_values_test.values[:,:,1]
+    shap_dic = {}
+    i = 0
+    while i < shap_values_test.values.shape[1]:
+        sum_shap = 0
+        for m in shap_values_test.values[:, i]:
+            sum_shap += np.abs(m)
+        shap_dic[shap_values_test.feature_names[i]] = sum_shap / shap_values_test.values.shape[0]
+        i += 1
+    return shap_dic
+
+def shap_absolute_rank(shap_values_test):
+    """
+    calculate the rank  list in the format `[['feature_name', mean(abs(shap))]]`
+    @param shap_values_test: calculated shap explainer
+    @return: sorted shap rank list
+    """
+    # firstly,
+    abs_rank_lst = []
+    for i in range(shap_values_test.values.shape[1]):
+        importance = sum(abs(shap_values_test.values[:, i])) / shap_values_test.values.shape[0]
+        feature_name = shap_values_test.feature_names[i]
+        abs_rank_lst.append([feature_name, importance])
+
+    abs_rank_lst = sorted(abs_rank_lst, key=lambda list: list[1], reverse=True)
+    return abs_rank_lst
+
+## top 10 scatter plot
+def top_10_scatter_plot(shap_values_test,var_dict,save_contrl):
+    abs_rank_lst = shap_absolute_rank(shap_values_test)
+    variable_to_display = [x[0] for x in abs_rank_lst if round(x[1], 2) >= 0.1]
+
+    lim_dic = {"age": [49, 103],
+               "ZincomeT": [-6.7, 5],
+               "ZwealthT": [-5.5, 3],
+               'Zanxiety': [-1.5, 4.5],
+               'Zperceivedconstraints': [-1.5, 3.5],
+               'Zconscientiousness': [-2.5, 5]}
+
+    i = 0
+    fontsize_ticks = 12
+    fontsize_labels = 13
+    figure, axis = plt.subplots(2, round((len(variable_to_display) + 0.1) / 2))
+    figure.subplots_adjust(left=0.08, top=0.95, bottom=0.08, right=0.95)
+    figure.set_figheight(8)
+    figure.set_figwidth(18)
+
+    for (m, n), subplot in np.ndenumerate(axis):
+        if i < len(variable_to_display):
+            var = variable_to_display[i]
+            ind = shap_values_test.feature_names.index(var)
+            shap_value = shap_values_test.values[:, ind]
+            value = shap_values_test.data[:, ind]
+            if var in lim_dic:
+                lim_upper, lim_lower = lim_dic[var][1], lim_dic[var][0]
+            else:
+                lim_upper, lim_lower = int(value.max()) + 1, int(value.min()) - 1
+
+            axis[m, n].scatter(value, shap_value, c=value, s=[25] * len(value), cmap='coolwarm', norm=plt.Normalize(vmin=lim_lower, vmax=lim_upper))
+            axis[m, n].set_xlim(lim_lower, lim_upper)
+            axis[m, n].grid(axis='y', alpha=0.4, linestyle='dashed')
+            axis[m, n].axhline(y=0, color='red', linestyle='--', alpha=0.6)
+            axis[m, n].tick_params(axis='both', which='major', labelsize=fontsize_ticks)
+            axis[m, n].spines['top'].set_visible(False)
+            axis[m, n].spines['right'].set_visible(False)
+            axis[m, n].set_ylabel('SHAP value', fontsize=fontsize_labels)
+            axis[m, n].set_xlabel(var_dict[var], fontsize=fontsize_labels)
+            axis[m, n].set_axisbelow(True)
+
+            i += 1
+    figure.tight_layout()
+    plt.show()
+    if save_contrl:
+        plt.savefig(Path.cwd() / f'OX_Thesis/graphs/shap_scatter_top_seed_{random_state}.pdf')
+
+
+def shap_rank_bar_plot(shap_values_test,var_dict,max_display):
+    """
+    plot the shap rank bar graph for all variables
+    @param shap_values_test: shap explainer
+    @param var_dict: variable and display name dict
+    @param max_display: max variable amount to display in the graph
+    """
+    color_blue = '#001C5B'
+    # summary bar plot
+    # max_display = 61
+    fontsize_ticks = 20
+    fontsize_labels = 21
+    sum_features = 'Sum of ' + str(shap_values_test.shape[1] - max_display+1) + ' other features'
+    var_dict[sum_features] = sum_features
+    shap.plots.bar(shap_values_test, show=False, max_display=max_display)
+    fig = plt.gcf()
+    # 26，19
+    fig.set_figheight(26)
+    fig.set_figwidth(19)
+    # fig.subplots_adjust(left=0.4, top=0.99, bottom=0.04,right=0.95)
+    fig.subplots_adjust(left=0.3, top=0.99, bottom=0.04, right=0.95)
+
+    ax = plt.gca()
+
+
+    ylabels = [var_dict[y_tick.get_text()] for y_tick in ax.get_yticklabels()]
+    ax.set_yticklabels(ylabels)
+    ax.tick_params(axis='both', which='major', labelsize=fontsize_ticks)
+    # xax.set_ylabel('Input Factors', fontsize=fontsize_labels)
+    ax.set_xlabel('mean(|SHAP Value|)', fontsize=fontsize_labels)
+    fig.tight_layout()
+    # plt.savefig(Path.cwd()/'graphs/mean_shap_top10.pdf')
+    # plt.savefig(Path.cwd() / 'graphs/mean_shap_all.pdf')
+
+    plt.show()
+
+
+def beeswarm_plot(shap_values_test,model,max_display,var_dict,save_contrl):
+    #
+    fontsize_ticks = 20
+    fontsize_labels = 21
+    shap.summary_plot(shap_values_test,
+                      model.X_test,
+                      show=False,
+                      max_display=max_display,
+                      cmap='coolwarm')
+    fig = plt.gcf()
+    fig.set_figheight(10)
+    fig.set_figwidth(16)
+    fig.subplots_adjust(left=0.28, top=0.95, right=1.01, bottom=0.1)
+
+    ax = plt.gca()
+    plt.rc('legend', fontsize=25)
+    ax.set_xlabel('SHAP Value', fontsize=fontsize_labels)
+    ylabels = [var_dict[y_tick.get_text()] for y_tick in ax.get_yticklabels()]
+    ax.tick_params(axis='both', which='major', labelsize=fontsize_ticks)
+    ax.set_yticklabels(ylabels)
+    if save_contrl:
+        plt.savefig(Path.cwd() / 'graphs/summary_shap.pdf')
+    plt.show()
+
+
+
+
+# data import
+df = params.data_reader(source='us', dataset='HRS', bio=False)
+model_params = params.model_params
+
+df.shape  # (13575, 72)
+
+# Model Performance Comparison
+"""
+print(f'today is {datetime.today()}')
+for model_selection in ['xgb', 'lgb']:
+    print(f'\n{model_selection}')
+    model = Models.Model_fixed_test_size(data=df,
+                                         test_size=model_params['test_size'],
+                                         domain_list=model_params['domain_dict']['all'],
+                                         model=model_selection,
+                                         train_subset_size=1,
+                                         order=0,
+                                         y_colname=model_params['y_colname'],
+                                         random_state=model_params['random_state'])
+    evas = Evaluate.metric(model)
+    print(f'imv={evas.imv},\nroc-auc={evas.auc_score},\npr-auc={evas.pr_auc},\nf1={evas.pr_f1},\nefron_r2={evas.efron_rsquare},\nffc_r2={evas.ffc_r2},\nIP={evas.pr_no_skill}')
+    del model, evas
+"""
+
+
+
+# shap
+model = Models.Model_fixed_test_size(data=df,
+                                     test_size=model_params['test_size'],
+                                     domain_list=model_params['domain_dict']['all'],
+                                     model='lgb',
+                                     train_subset_size=1,
+                                     order=0,
+                                     y_colname=model_params['y_colname'],
+                                     random_state=model_params['random_state'])
+
+
+explainer = shap.TreeExplainer(model.model)
+shap_values_test = explainer(model.X_test)
+shap_dict = shap_dict(shap_values_test)
+
+shap_rank_bar_plot(shap_values_test=shap_values_test,
+                   var_dict=model_params['var_dict'],
+                   max_display=shap_values_test.shape[1])
+
+top_10_scatter_plot(shap_values_test=shap_values_test,var_dict=model_params['var_dict'],save_contrl=False)
+
+beeswarm_plot(shap_values_test=shap_values_test,
+              model=model,
+              max_display=10,
+              var_dict=model_params['var_dict'],
+              save_contrl=False)

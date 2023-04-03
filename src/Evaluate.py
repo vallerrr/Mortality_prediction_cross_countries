@@ -118,9 +118,8 @@ def mcfadden_adjusted_rsquare(coef, X, y):
 class metric():
     def __init__(self, model):
         super(metric, self).__init__()
-        if model.y_train & model.train_set_predict:
+        if len(model.y_train)>=0 & len(model.train_set_predict)>=0:
             train_set_control=True
-
             train_set_pred = model.train_set_predict
         else:
             train_set_control = False

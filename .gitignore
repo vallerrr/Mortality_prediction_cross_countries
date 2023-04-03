@@ -5,3 +5,4 @@ data_preprocess_src/vars_found_in_raw/SHARE.csv
 src/temp.ipynb
 src/__pycache__/
 src/.ipynb_checkpoints/
+*.pyc

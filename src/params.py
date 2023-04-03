@@ -205,7 +205,8 @@ var_dict = {"maleYN": "Male",
 model_params = {"random_state": 87785,
                 "domain_dict": domain_dict,
                 "var_dict":var_dict,
-                'test_size':0.3}
+                'test_size':0.3,
+                'y_colname':'death'}
 
 
 
