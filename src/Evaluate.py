@@ -118,21 +118,29 @@ def mcfadden_adjusted_rsquare(coef, X, y):
 class metric():
     def __init__(self, model):
         super(metric, self).__init__()
+        if model.y_train & model.train_set_predict:
+            train_set_control=True
+
+            train_set_pred = model.train_set_predict
+        else:
+            train_set_control = False
+
 
         y_train = model.y_train
-        train_set_pred = model.train_set_predict
-
         y_test = model.y_test
         y_test_pred_label = model.test_set_predict
         y_test_pred_prob = model.test_set_predict_prob
-        if model.samp_weight_control:
 
-            train_set_weight = model.train_sample_weight
+
+        if model.samp_weight_control:
             test_set_weight = model.test_sample_weight
-            # train set
-            self.train_f1_score_label = metrics.f1_score(y_train, train_set_pred, sample_weight=train_set_weight)
-            self.train_confusion_label = metrics.confusion_matrix(y_train, train_set_pred, sample_weight=train_set_weight)
-            self.train_roc_auc_score_label = metrics.roc_auc_score(y_train, train_set_pred, sample_weight=train_set_weight)
+            if train_set_control:
+                train_set_weight = model.train_sample_weight
+
+                # train set
+                self.train_f1_score_label = metrics.f1_score(y_train, train_set_pred, sample_weight=train_set_weight)
+                self.train_confusion_label = metrics.confusion_matrix(y_train, train_set_pred, sample_weight=train_set_weight)
+                self.train_roc_auc_score_label = metrics.roc_auc_score(y_train, train_set_pred, sample_weight=train_set_weight)
 
             # test set calculated with label
             self.test_f1_score_label = metrics.f1_score(y_test, y_test_pred_label, sample_weight=test_set_weight)
@@ -150,9 +158,10 @@ class metric():
             self.auc_score = roc_auc_score(y_test, y_test_pred_prob, sample_weight=test_set_weight)
             self.imv = imv(true=y_test,train=y_train,pred_prob=y_test_pred_prob)
         else:
-            self.train_f1_score_label = metrics.f1_score(y_train, train_set_pred)
-            self.train_confusion_label = metrics.confusion_matrix(y_train, train_set_pred)
-            self.train_roc_auc_score_label = metrics.roc_auc_score(y_train, train_set_pred)
+            if train_set_control:
+                self.train_f1_score_label = metrics.f1_score(y_train, train_set_pred)
+                self.train_confusion_label = metrics.confusion_matrix(y_train, train_set_pred)
+                self.train_roc_auc_score_label = metrics.roc_auc_score(y_train, train_set_pred)
 
             # test set calculated with label
             self.test_f1_score_label = metrics.f1_score(y_test, y_test_pred_label)
@@ -162,8 +171,8 @@ class metric():
             # test set calculated with prob
             # pr part
             self.precision_test, self.recall_test, _ = precision_recall_curve(y_test, y_test_pred_prob)
-            self.pr_f1, self.pr_auc = f1_score(y_test, y_test_pred_label), auc(
-                self.recall_test, self.precision_test)
+            self.pr_f1, self.pr_auc = f1_score(y_test, y_test_pred_label), \
+                                      auc(self.recall_test, self.precision_test)
             self.pr_no_skill = len(y_train[y_train == 1]) / len(y_train)
 
             self.r_score = r2(y_test, y_test_pred_label)
