@@ -8,7 +8,7 @@ from pathlib import Path
 
 # data reader
 
-def data_reader(source,dataset,bio):
+def data_reader(source,dataset,bio,platform):
     """
     read data 
     @param bio: whether this is a bio dataset 
@@ -17,9 +17,10 @@ def data_reader(source,dataset,bio):
     @return: selected dataset 
     """
     # note that for SHARE, data_by_us.csv = recoded_data_wave_1_no_missing.csv
-
-    data_path = Path.cwd()/f'Data/{dataset}'
-
+    if platform=="jupyter":
+        data_path = Path.cwd().parent/f'Data/{dataset}'
+    else:
+        data_path = Path.cwd() / f'Data/{dataset}'
     if source == 'author':
         if bio:
             df = pd.read_csv(data_path/'model_used_data/bio_all_raw_columns_no_missing.csv')
@@ -38,10 +39,10 @@ def data_reader(source,dataset,bio):
         else:
             # df = pd.read_csv(file_path+'data_preprocess/Data/merge_data_selected_author_rows_no_missing_versioin_3.csv')
             df = pd.read_csv(data_path/'model_used_data/df_by_us.csv')
-
-        df = df.loc[df['age'] >= 50, ]
-        df.rename(columns={'deathYear': 'death_year', 'deathMonth': 'death_month'}, inplace=True)
-        df['deathYR'] = df['death_year'] + df['death_month'] / 12
+        if dataset=='HRS':
+            df = df.loc[df['age'] >= 50, ]
+            df.rename(columns={'deathYear': 'death_year', 'deathMonth': 'death_month'}, inplace=True)
+            df['deathYR'] = df['death_year'] + df['death_month'] / 12
 
     return df
 
