@@ -13,7 +13,7 @@ df_by_us = DataImport.data_reader_by_us(bio=True)
 
 year_of_interest=2008
 df = pd.DataFrame(df_by_us.loc[df_by_us['interview_year']==year_of_interest])
-# df=df_by_us.copy()
+# df=df_by_us.csv.csv.copy()
 df_deaths = df.loc[:,['death','death_year','deathYR','death_month']]
 window_size=1
 df_deaths['deathYR'].max()

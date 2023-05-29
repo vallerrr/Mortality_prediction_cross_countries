@@ -48,7 +48,7 @@ def shap_absolute_rank(shap_values_test):
     return abs_rank_lst
 
 ## top 10 scatter plot
-def top_10_scatter_plot(shap_values_test,var_dict,save_contrl):
+def top_10_scatter_plot(shap_values_test,var_dict,save_control=False):
     abs_rank_lst = shap_absolute_rank(shap_values_test)
     variable_to_display = [x[0] for x in abs_rank_lst if round(x[1], 2) >= 0.1]
 
@@ -92,11 +92,11 @@ def top_10_scatter_plot(shap_values_test,var_dict,save_contrl):
             i += 1
     figure.tight_layout()
     plt.show()
-    if save_contrl:
-        plt.savefig(Path.cwd() / f'OX_Thesis/graphs/shap_scatter_top_seed_{random_state}.pdf')
+    if save_control:
+        plt.savefig(Path.cwd() / f'OX_Thesis/graphs/shap_scatter_top_10.pdf')
 
 
-def shap_rank_bar_plot(shap_values_test,var_dict,max_display):
+def shap_rank_bar_plot(shap_values_test,var_dict,max_display,save_control=False):
     """
     plot the shap rank bar graph for all variables
     @param shap_values_test: shap explainer
@@ -127,13 +127,13 @@ def shap_rank_bar_plot(shap_values_test,var_dict,max_display):
     # xax.set_ylabel('Input Factors', fontsize=fontsize_labels)
     ax.set_xlabel('mean(|SHAP Value|)', fontsize=fontsize_labels)
     fig.tight_layout()
-    # plt.savefig(Path.cwd()/'graphs/mean_shap_top10.pdf')
-    # plt.savefig(Path.cwd() / 'graphs/mean_shap_all.pdf')
+    if save_control:
+        plt.savefig(Path.cwd() / 'graphs/mean_shap_all.pdf')
 
     plt.show()
 
 
-def beeswarm_plot(shap_values_test,model,max_display,var_dict,save_contrl):
+def beeswarm_plot(shap_values_test,model,max_display,var_dict,save_control=False):
     #
     fontsize_ticks = 20
     fontsize_labels = 21
@@ -153,39 +153,20 @@ def beeswarm_plot(shap_values_test,model,max_display,var_dict,save_contrl):
     ylabels = [var_dict[y_tick.get_text()] for y_tick in ax.get_yticklabels()]
     ax.tick_params(axis='both', which='major', labelsize=fontsize_ticks)
     ax.set_yticklabels(ylabels)
-    if save_contrl:
+    if save_control:
         plt.savefig(Path.cwd() / 'graphs/summary_shap.pdf')
     plt.show()
 
 
+def shap_values_and_dict(model):
+    explainer = shap.TreeExplainer(model.model)
+    shap_values_test = explainer(model.X_test)
+    shap_dict_ = shap_dict(shap_values_test)
+
+    return shap_values_test,shap_dict_
 
 
-# data import
-df = params.data_reader(source='us', dataset='HRS', bio=False)
-model_params = params.model_params
-
-df.shape  # (13575, 72)
-
-# Model Performance Comparison
 """
-print(f'today is {datetime.today()}')
-for model_selection in ['xgb', 'lgb']:
-    print(f'\n{model_selection}')
-    model = Models.Model_fixed_test_size(data=df,
-                                         test_size=model_params['test_size'],
-                                         domain_list=model_params['domain_dict']['all'],
-                                         model=model_selection,
-                                         train_subset_size=1,
-                                         order=0,
-                                         y_colname=model_params['y_colname'],
-                                         random_state=model_params['random_state'])
-    evas = Evaluate.metric(model)
-    print(f'imv={evas.imv},\nroc-auc={evas.auc_score},\npr-auc={evas.pr_auc},\nf1={evas.pr_f1},\nefron_r2={evas.efron_rsquare},\nffc_r2={evas.ffc_r2},\nIP={evas.pr_no_skill}')
-    del model, evas
-"""
-
-
-
 # shap
 model = Models.Model_fixed_test_size(data=df,
                                      test_size=model_params['test_size'],
@@ -205,10 +186,11 @@ shap_rank_bar_plot(shap_values_test=shap_values_test,
                    var_dict=model_params['var_dict'],
                    max_display=shap_values_test.shape[1])
 
-top_10_scatter_plot(shap_values_test=shap_values_test,var_dict=model_params['var_dict'],save_contrl=False)
+top_10_scatter_plot(shap_values_test=shap_values_test,var_dict=model_params['var_dict'],save_control=False)
 
 beeswarm_plot(shap_values_test=shap_values_test,
               model=model,
               max_display=10,
               var_dict=model_params['var_dict'],
-              save_contrl=False)
+              save_control=False)
+"""

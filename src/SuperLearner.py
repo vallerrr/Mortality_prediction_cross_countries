@@ -42,10 +42,10 @@ def meta_model(df_pred):
     @return:
     """
     X = df_pred[list(get_models().keys())]
-    y = df_pred['ori_data']
+    y = list(df_pred['ori_data'])
 
     # model = LinearRegression()
-    model = XGB.XGBClassifier()
+    model = LGBM.LGBMClassifier()
     model.fit(X, y)
     return model
 
@@ -75,10 +75,9 @@ def meta_data_generation(X, y, y_colname, k, domain_list, random_state):
         temp['ori_data'] = list(y_fold_test)
 
         for model in models.keys():
-            print(model)
             models[model].fit(X_fold_train[domain_list], y_fold_train)
             pred = [x[1] for x in models[model].predict_proba(X_fold_test[domain_list])]
-
+            temp[f'{model}_label'] = models[model].predict(X_fold_test[domain_list])
             temp[model] = pred
 
         df_pred = pd.concat([df_pred, temp], axis=0)
@@ -95,6 +94,7 @@ def base_model_prediction(base_models, X, y, X_test, y_test):
     for model_name in base_models.keys():
         base_models[model_name].fit(X, y)  # train in the whole train set
         df_base_pred[model_name] = [x[1] for x in base_models[model_name].predict_proba(X_test)]
+        df_base_pred[f'{model_name}_label'] = base_models[model_name].predict(X_test)
     return base_models, df_base_pred
 
 
@@ -126,39 +126,13 @@ class superlearner():
                                                                     y_test=self.y_test)
 
         self.meta_x = self.df_base_pred.drop(columns=['ori_data'])
-        self.df_base_pred['sl'] = [x[1] for x in self.meta_model.predict_proba(self.meta_x)]
+        proba_columns = [x for x in self.meta_x.columns if 'label' not in x]
+
+        self.df_base_pred['sl'] = [x[1] for x in self.meta_model.predict_proba(self.meta_x[proba_columns])]
+
+        label_columns = [x for x in self.meta_x.columns if 'label' in x]
+        meta_x_labels = self.meta_x[label_columns]
+
+        self.df_base_pred['sl_label'] = self.meta_model.predict(meta_x_labels.rename(columns={x:x.replace('_label','') for x in label_columns}))
 
 
-
-# function part
-# Load data
-
-# df = DataImport.data_reader_by_us(bio=False)
-df = params.data_reader(source='us', dataset='HRS', bio=False)
-
-# control Zone
-
-model_params = params.model_params
-model_params['k'] = 3
-model_params['y_colname'] = 'death'
-
-superlearner = superlearner(data=df,
-                            test_size=model_params['test_size'],
-                            domain_list=model_params['domain_dict']['all'],
-                            y_colname=model_params['y_colname'],
-                            k=model_params['k'],
-                            random_state=model_params['random_state'])
-
-# evaluation
-from sklearn.metrics import precision_recall_curve, auc, roc_auc_score
-
-df_base_pred = superlearner.df_base_pred
-for model_name in list(get_models().keys()) + ['sl']:
-    y_test = df_base_pred['ori_data']
-    y_test_pred_prob = df_base_pred[model_name]
-
-    precision_test, recall_test, _ = precision_recall_curve(y_test, y_test_pred_prob)
-    pr_auc = auc(recall_test, precision_test)
-    auc_score = roc_auc_score(y_test, y_test_pred_prob)
-
-    print(f'for model {model_name}, pr_auc={pr_auc}, auc_score = {auc_score} ')

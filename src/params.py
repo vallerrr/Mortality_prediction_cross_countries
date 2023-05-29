@@ -2,13 +2,14 @@
 import pandas as pd
 import numpy as np
 from pathlib import Path
-
-
-
+import os
+def confirm_cwd(platform):
+    if platform == 'jupyter':
+        os.chdir(Path.cwd().parent)
+    print(f"cwd: {Path.cwd()}")
 
 # data reader
-
-def data_reader(source,dataset,bio,platform):
+def data_reader(source,dataset,bio):
     """
     read data 
     @param bio: whether this is a bio dataset 
@@ -16,11 +17,10 @@ def data_reader(source,dataset,bio,platform):
     @param dataset: {HRS,SHARE,CHARLES}
     @return: selected dataset 
     """
+
     # note that for SHARE, data_by_us.csv = recoded_data_wave_1_no_missing.csv
-    if platform=="jupyter":
-        data_path = Path.cwd().parent/f'Data/{dataset}'
-    else:
-        data_path = Path.cwd() / f'Data/{dataset}'
+
+    data_path = Path.cwd() / f'Data/{dataset}'
     if source == 'author':
         if bio:
             df = pd.read_csv(data_path/'model_used_data/bio_all_raw_columns_no_missing.csv')
@@ -39,13 +39,49 @@ def data_reader(source,dataset,bio,platform):
         else:
             # df = pd.read_csv(file_path+'data_preprocess/Data/merge_data_selected_author_rows_no_missing_versioin_3.csv')
             df = pd.read_csv(data_path/'model_used_data/df_by_us.csv')
-        if dataset=='HRS':
+        if dataset == 'HRS':
             df = df.loc[df['age'] >= 50, ]
             df.rename(columns={'deathYear': 'death_year', 'deathMonth': 'death_month'}, inplace=True)
             df['deathYR'] = df['death_year'] + df['death_month'] / 12
 
+
     return df
 
+def standardise(col,df):
+    df[col]-=df[col].mean()
+    df[col]/=df[col].std()
+    return df
+def read_merged_data():
+    """
+     merge HRS and SHARE without any treatment
+    @return: the merged dataset and domain_lst (intersections)
+    """
+
+    df_HRS = data_reader(source='us', dataset='HRS', bio=False)
+    df_SHARE = data_reader(source='us', dataset='SHARE', bio=False)
+    df_ELSA = data_reader(source='us', dataset='SHARE', bio=False)
+
+    # wealth pre-treat
+    q = 30
+    df_HRS['ZwealthT'] = pd.cut(df_HRS['ZwealthT'], bins=q, labels=False)
+    df_SHARE['ZwealthT'] = pd.cut(df_SHARE['ZwealthT'], bins=q, labels=False)
+    df_ELSA['ZwealthT'] = pd.cut(df_ELSA['ZwealthT'], bins=q, labels=False)
+
+    # label data
+    df_HRS['dataset'] = 0
+    df_SHARE['dataset'] = 1
+    df_ELSA['dataset'] = 2
+
+    # merge without treatment
+    df = pd.merge(left=df_SHARE, right=df_HRS, how='outer')
+    df = pd.merge(left=df, right=df_ELSA, how='outer')
+
+    domain_lst = list(set(df_HRS.columns).intersection(set(df_SHARE.columns)).intersection(set(df_ELSA.columns)))
+    domain_lst.remove('death')
+    domain_lst.remove('hhid')
+    domain_lst.remove('pn')
+
+    return df, domain_lst
 
 
 domain_dict = {'demographic': ['maleYN', 'blackYN', 'hispanicYN', 'migrantYN', 'age'],
@@ -212,7 +248,7 @@ model_params = {"random_state": 87785,
 
 
 
-
+'''
 def recode_categorical_vars(column, cat_num, df):
     # pair of values and their number of observations
     cat_val_count_lst = []
@@ -233,3 +269,4 @@ def recode_categorical_vars(column, cat_num, df):
     # cut bins
     df[column] = pd.cut(df[column], bins=[cats[0] - 100] + cats + [cats[len(cats) - 1] + 100], labels=[x[0] for x in cat_val_count_lst])
     return df
+'''

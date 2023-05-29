@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from src import Models
 from src import Evaluate
-from src import DataImport
+
 from matplotlib.ticker import MaxNLocator
 from pathlib import Path
 import matplotlib.gridspec as gridspec
@@ -20,7 +20,7 @@ def create_subtitle(fig: plt.Figure, grid: SubplotSpec, title: str,fontsize):
     row.axis('off')
 
 
-domains = DataImport.domain_dict()
+domains = params.domain_dict()
 df_by_us = DataImport.data_reader_by_us(bio=False)
 
 
@@ -142,7 +142,7 @@ plt.show()
 
 
 '''
-df_by_us=DataImport.data_reader_by_us(bio=False)
+df_by_us.csv.csv=DataImport.data_reader_by_us(bio=False)
 df_by_author=DataImport.data_reader(bio=False)
 
 
@@ -151,17 +151,17 @@ df_by_author['deathYR'].max()
 
 
 df_by_author.drop(columns=['sampWeight'],inplace=True)
-df_by_us['death_before_2015']=[1 if (x==1)&(y<=2018) else 0 for x,y in zip(df_by_us['death'],df_by_us['deathYR'])]
-df_by_us['death_before_2015'].value_counts()
+df_by_us.csv.csv['death_before_2015']=[1 if (x==1)&(y<=2018) else 0 for x,y in zip(df_by_us.csv.csv['death'],df_by_us.csv.csv['deathYR'])]
+df_by_us.csv.csv['death_before_2015'].value_counts()
 
 model = Models.Model_fixed_test_size(data=df, test_size=0.3, domain_list=domains['bio'],model='xgb',train_subset_size=1,order=0, y_colname='death')
 evaluate = Evaluate.metric(model=model)
 
-model_2 = Models.Model_fixed_test_size(data=df_by_us, test_size=0.3, domain_list=domains['all'],model='xgb',train_subset_size=1,order=0, y_colname='death_before_2015')
+model_2 = Models.Model_fixed_test_size(data=df_by_us.csv.csv, test_size=0.3, domain_list=domains['all'],model='xgb',train_subset_size=1,order=0, y_colname='death_before_2015')
 evaluate_2 = Evaluate.metric(model=model_2)
 
-df_by_us['age'].median()
-df_by_us.loc[df_by_us['death']==1,'age'].median()
+df_by_us.csv.csv['age'].median()
+df_by_us.csv.csv.loc[df_by_us.csv.csv['death']==1,'age'].median()
 
 
 

@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import itertools
-from src import DataImport
+from src import params
 from src import Evaluate
 from src import Models
 from sklearn.metrics import f1_score, precision_recall_curve, auc, roc_auc_score

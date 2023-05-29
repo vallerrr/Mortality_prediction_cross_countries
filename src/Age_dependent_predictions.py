@@ -8,9 +8,9 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error,mean_absolute_error
 
-def read_and_reshape_data(dataset,domain_key):
+def read_and_reshape_data(dataset, domain_key):
     bio=True if dataset=='HRS' else False
-    df = params.data_reader(source='us', dataset=dataset, bio=bio, platform='')
+    df = params.data_reader(source='us', dataset=dataset, bio=bio)
     model_params = params.model_params
 
     # generating death age
@@ -70,20 +70,3 @@ for dataset in ['HRS','SHARE']:
         print(f'for model {model_name}')
         regression_evaluation(df_res['true_age'], df_res[f'{model_name}_pred'])
 
-
-# to merge datasets
-'''
-dataset='HRS'
-df_HRS,model_params=read_and_reshape_data(dataset,'all')
-df_HRS['dataset']=0
-
-
-dataset='SHARE'
-df_SHARE,model_params=read_and_reshape_data(dataset,'all')
-df_SHARE['dataset']=1
-col='ZwealthT'
-df_SHARE[col]=df_SHARE[col]-np.mean(df_SHARE[col])
-df_SHARE[col]=df_SHARE[col]/np.std(df_SHARE[col])
-
-df=pd.merge(left=df_SHARE,right=df_HRS,how='outer')
-'''

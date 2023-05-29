@@ -30,12 +30,24 @@ def polynominal(df, order):
 
 
 class Model_fixed_test_size():
-    def __init__(self, data, test_size, domain_list, model, train_subset_size, order, y_colname,random_state = 4):
+    def __init__(self, data, model_params, domain, model, train_subset_size, order):
         super(Model_fixed_test_size, self).__init__()
+
         # train test split
-        print(f'seed is {random_state}')
-        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(data.drop(y_colname, axis=1),
-                                                                                data[y_colname], test_size=test_size, random_state=random_state)
+
+        test_size = model_params['test_size']
+        if domain in list(model_params['domain_dict'].keys()):
+            domain_list = model_params['domain_dict'][domain]
+        else:
+            domain_list = domain
+        y_colname = model_params['y_colname']
+        random_state = model_params['random_state']
+        # print(f'seed is {random_state}')
+
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(data[domain_list],
+                                                                                data[y_colname],
+                                                                                test_size=test_size,
+                                                                                random_state=random_state)
         # if we only need a subset of the training set train_subset_size!=0
         self.X_train = self.X_train.sample(n=int(train_subset_size * len(self.X_train)), random_state=random_state)
 
@@ -47,8 +59,7 @@ class Model_fixed_test_size():
 
         else:
             self.samp_weight_control = False
-        self.X_train = self.X_train[domain_list]
-        self.X_test = self.X_test[domain_list]
+
 
         if order != 0:
             # print('Before: the colnum of df is {}'.format(len(self.X_train.columns)))
@@ -135,6 +146,6 @@ def store_coef(count, k, model_name, seed, model, domains, df_coef,cv_name):
     for coef, feature in zip(model.coef_.T, domains):
         coef_dict[feature] = coef[0]
     temp = pd.DataFrame(coef_dict, index=[0])
-    df_coef.loc[len(df_coef),] = temp.loc[0, ]
+    df_coef.loc[len(df_coef), ] = temp.loc[0, ]
     return df_coef
 

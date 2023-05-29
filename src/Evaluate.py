@@ -1,5 +1,6 @@
 import numpy as np
 import sklearn.metrics as metrics
+import pandas as pd
 from scipy.optimize import minimize
 from sklearn.metrics import f1_score, precision_recall_curve, auc, roc_auc_score
 def acc(y, yhat):
@@ -182,3 +183,57 @@ class metric():
             # roc
             self.auc_score = roc_auc_score(y_test, y_test_pred_prob)
             self.imv = imv(true=y_test, train=y_train, pred_prob=y_test_pred_prob)
+
+def print_model_fits(evas):
+    print(f'imv={evas.imv},\nroc-auc={evas.auc_score},\npr-auc={evas.pr_auc},\nf1={evas.pr_f1},\nefron_r2={evas.efron_rsquare},\nffc_r2={evas.ffc_r2},\nIP={evas.pr_no_skill}')
+
+def sl_eva(superlearner):
+    models = list(superlearner.base_models.keys()) + ['sl']
+    df_base_pred = superlearner.df_base_pred
+    y_train = superlearner.y_train['death']
+    y_test = df_base_pred['ori_data']
+
+    df_eva = pd.DataFrame(columns=['model', 'pr_auc', 'roc_auc', 'f1', 'efron', 'ffc', 'ip','imv'])
+    for model in models:
+        y_test_pred_prob = df_base_pred[model]
+        y_test_pred_label = df_base_pred[f'{model}_label']
+        precision_test, recall_test, _ = precision_recall_curve(y_test, y_test_pred_prob)
+        pr_auc = auc(recall_test, precision_test)
+        roc_auc = roc_auc_score(y_test, y_test_pred_prob)
+        f1 = f1_score(y_test, y_test_pred_label)
+        # f1 = None
+        ffc = ffc_rsquare(true=y_test, train=y_train, pred=y_test_pred_prob)
+        efron = efron_rsquare(y_test, y_test_pred_prob)
+
+        imv_ = imv(true=y_test,train=y_train,pred_prob=y_test_pred_prob)
+        ip = len(y_train[y_train == 1]) / len(y_train)
+
+        df_eva.loc[len(df_eva)] = [model, pr_auc, roc_auc, f1, efron, ffc, ip, imv_]
+    return df_eva
+
+
+
+def sl_only_eva(superlearner):
+
+    df_base_pred = superlearner.df_base_pred
+    y_train = superlearner.y_train['death']
+    y_test = df_base_pred['ori_data']
+    y_test_pred_prob = df_base_pred['sl']
+    y_test_pred_label = df_base_pred[f'sl_label']
+
+    precision_test, recall_test, _ = precision_recall_curve(y_test, y_test_pred_prob)
+
+    dict_eva = {'test_auc_score': roc_auc_score(y_test, y_test_pred_prob),
+                'test_f1_score': f1_score(y_test, y_test_pred_label),
+
+                'test_pr_auc': auc(recall_test, precision_test),
+
+                'test_pr_no_skill': len(y_train[y_train == 1]) / len(y_train),
+                'test_efron_r2': efron_rsquare(y_test, y_test_pred_prob),
+
+                'test_ffc_r2': ffc_rsquare(true=y_test, train=y_train, pred=y_test_pred_prob),
+
+                'test_briern_r2': efron_rsquare(true=y_test,pred_prob=y_test_pred_prob),
+                'test_imv_r2': imv(true=y_test, train=y_train, pred_prob=y_test_pred_prob)}
+
+    return dict_eva

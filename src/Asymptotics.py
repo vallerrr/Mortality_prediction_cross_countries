@@ -1,5 +1,4 @@
 from src import Models
-from src import DataImport
 from src import Evaluate
 import random
 import pandas as pd
