@@ -19,7 +19,7 @@ model_params = params.model_params
 model_params['k'] = 5
 model_params['y_colname'] = 'death'
 domain_name = 'combination_all'
-df = pd.read_csv(os.getcwd()+'/temp_data/combined_data.csv')
+df = pd.read_csv('/well/mills/users/qlr082/combined_data.csv')
 model_params['domain_dict'][domain_name] = ['Zpessimism', 'everunemployed', 'Zperceivedconstraints', 'Zmotherseduc', 'rocc', 'nevermarried', 'ZwealthT', 'age', 'everrent', 'dataset', 'Zoptimism', 'maleYN', 'Znegaffect', 'sleepYN', 'migrantYN', 'fathersocc', 'Zfatherseduc', 'everdivorced', 'Zposaffect', 'currsmokeYN', 'Zhopelessness', 'eversmokeYN', 'Zeduccat', 'modactivityYN', 'vigactivityYN', 'sumadultAE']
 model_params['var_dict']['dataset']='Datasource'
 
