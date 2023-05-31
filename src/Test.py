@@ -34,8 +34,9 @@ Eva_fixed_test_size_sl = pd.DataFrame(columns=['model', 'var_num','train_subset_
 
 # main
 for train_subset_size in np.arange(start, end, step):
-    print(train_subset_size)
+
     for sub_set_size in range(1, len(var_set) + 1):
+        print(train_subset_size, sub_set_size)
         random.seed(1981236101)
         model_params['domain_dict']['sub_set'] = random.sample(var_set, sub_set_size)
         seed = random.randint(a=1, b=1000000000000)
@@ -59,4 +60,4 @@ for train_subset_size in np.arange(start, end, step):
                                                                    sl_eva['test_briern_r2'],
                                                                    sl_eva['test_imv_r2']]
 
-Eva_fixed_test_size_sl.to_csv(os.getcwd()+"results/asymptotics_sl_with_random_sampling_on_vars_seed_specified.csv",index=False)
+        Eva_fixed_test_size_sl.to_csv(os.getcwd()+"results/asymptotics_sl_with_random_sampling_on_vars_seed_specified.csv",index=False)
