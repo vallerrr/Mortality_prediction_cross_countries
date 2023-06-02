@@ -101,14 +101,16 @@ def base_model_prediction(base_models, X, y, X_test, y_test):
 # main class
 class superlearner():
 
-    def __init__(self, data, test_size, domain_list, y_colname, k, random_state):
+    def __init__(self, data,train_subset_size ,test_size, domain_list, y_colname, k, random_state):
         super(superlearner, self).__init__()
         self.name = 'sl'
         # first split data
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(data.drop(y_colname, axis=1), data[y_colname], test_size=test_size, random_state=random_state)
+        self.X_train = self.X_train.sample(n=int(train_subset_size * len(self.X_train)), random_state=random_state)
 
         # step.1 prepare for train-test splitting
         self.X_train.reset_index(inplace=True)
+        print(len(self.X_train))
         self.y_train = pd.DataFrame(self.y_train).reset_index()
 
         # step.2 meta data generating

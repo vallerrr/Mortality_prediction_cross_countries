@@ -24,8 +24,8 @@ model_params['domain_dict'][domain_name] = ['Zpessimism', 'everunemployed', 'Zpe
 model_params['var_dict']['dataset']='Datasource'
 
 # sl initialisation
-start=0.3
-end=1.5
+start = sys.argv[1]
+end = sys.argv[2]
 step=0.5
 model='sl'
 var_set = model_params['domain_dict'][domain_name]
@@ -41,6 +41,7 @@ for train_subset_size in np.arange(start, end, step):
         model_params['domain_dict']['sub_set'] = random.sample(var_set, sub_set_size)
         seed = random.randint(a=1, b=1000000000000)
         model_params['seed'] = seed
+        print(model_params['test_size'])
         superlearner = SuperLearner.superlearner(data=df,
                                                  test_size=model_params['test_size'],
                                                  domain_list=model_params['domain_dict']['sub_set'],
@@ -60,4 +61,4 @@ for train_subset_size in np.arange(start, end, step):
                                                                    sl_eva['test_briern_r2'],
                                                                    sl_eva['test_imv_r2']]
 
-        Eva_fixed_test_size_sl.to_csv(os.getcwd()+"results/asymptotics_sl_with_random_sampling_on_vars_seed_specified.csv",index=False)
+        Eva_fixed_test_size_sl.to_csv(os.getcwd()+f"results/asymptotics_sl_with_random_sampling_on_vars_seed_specified_{start}_{end}.csv",index=False)
