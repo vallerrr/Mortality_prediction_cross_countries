@@ -43,6 +43,7 @@ for train_subset_size in np.arange(start, end, step):
         model_params['seed'] = seed
         print(model_params['test_size'])
         superlearner = SuperLearner.superlearner(data=df,
+                                                 train_subset_size = train_subset_size,
                                                  test_size=model_params['test_size'],
                                                  domain_list=model_params['domain_dict']['sub_set'],
                                                  y_colname=model_params['y_colname'],
