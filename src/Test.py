@@ -61,4 +61,4 @@ for train_subset_size in np.arange(start, end, step):
                                                                    sl_eva['test_briern_r2'],
                                                                    sl_eva['test_imv_r2']]
 
-        Eva_fixed_test_size_sl.to_csv(os.getcwd()+f"results/asymptotics_sl_with_random_sampling_on_vars_seed_specified_{start}_{end}.csv",index=False)
+        Eva_fixed_test_size_sl.to_csv(f"/gpfs3/users/mills/qlr082/OX_thesis/results/asymptotics_sl_with_random_sampling_on_vars_seed_specified_{start}_{end}.csv",index=False)
