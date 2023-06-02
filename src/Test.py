@@ -24,9 +24,9 @@ model_params['domain_dict'][domain_name] = ['Zpessimism', 'everunemployed', 'Zpe
 model_params['var_dict']['dataset']='Datasource'
 
 # sl initialisation
-start = sys.argv[1]
-end = sys.argv[2]
-step=0.5
+start = float(sys.argv[1])
+end = float(sys.argv[2])
+step=0.05
 model='sl'
 var_set = model_params['domain_dict'][domain_name]
 Eva_fixed_test_size_sl = pd.DataFrame(columns=['model', 'var_num','train_subset_size', 'test_auc_score', 'test_f1_score',
