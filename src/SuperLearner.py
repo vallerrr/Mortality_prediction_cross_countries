@@ -107,10 +107,11 @@ class superlearner():
         # first split data
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(data.drop(y_colname, axis=1), data[y_colname], test_size=test_size, random_state=random_state)
         self.X_train = self.X_train.sample(n=int(train_subset_size * len(self.X_train)), random_state=random_state)
+        self.y_train = self.y_train.loc[self.X_train.index]
+        print(len(self.X_train),len(self.y_train))
 
         # step.1 prepare for train-test splitting
         self.X_train.reset_index(inplace=True)
-        print(len(self.X_train))
         self.y_train = pd.DataFrame(self.y_train).reset_index()
 
         # step.2 meta data generating
