@@ -63,10 +63,9 @@ def model_fit_and_store_result(df, model_params, group_number, domain_lst, domai
 
 def get_dc_params(domain_name_lst):
     domain_name_lst=list(domain_name_lst)
-    domain_name_lst.remove('all')
-    domain_name_lst.remove('all_bio')
-    domain_name_lst.remove('all_bio_adjusted')
-    domain_name_lst.remove('bio')
+    for remove_domain  in ['all','all_bio','all_bio_adjusted','bio']:
+        if remove_domain in domain_name_lst: domain_name_lst.remove(remove_domain)
+
     df_eval = pd.DataFrame(columns=['model', 'group_number', 'domain_list', 'domain_num',
                                       'pr_no_skill', 'pr_f1', 'pr_auc', 'roc_no_skill', 'roc_auc', 'brier', 'imv'])
     iterations = []
@@ -86,6 +85,7 @@ def dc_iteration(iterations,df_eval,df,model_params):
         domain_lst = domains['demographic'] if 'demographic' in domains_to_iter else []
 
         for single_domain in domains_to_iter: domain_lst = list(set(domain_lst + domains[single_domain]))
+        domain_lst = [x for x in domain_lst if x in list(df.columns)]
         df_eval = model_fit_and_store_result(df, model_params, group_number, domain_lst, domains_to_iter, df_eval)
     return df_eval
 

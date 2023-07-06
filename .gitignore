@@ -6,3 +6,4 @@ src/temp.ipynb
 src/__pycache__/
 src/.ipynb_checkpoints/
 *.pyc
+/results/

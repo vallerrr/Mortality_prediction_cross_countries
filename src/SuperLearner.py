@@ -101,7 +101,7 @@ def base_model_prediction(base_models, X, y, X_test, y_test):
 # main class
 class superlearner():
 
-    def __init__(self, data,train_subset_size ,test_size, domain_list, y_colname, k, random_state):
+    def __init__(self, data,train_subset_size,test_size, domain_list, y_colname, k, random_state):
         super(superlearner, self).__init__()
         self.name = 'sl'
         # first split data

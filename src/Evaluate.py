@@ -228,12 +228,12 @@ def sl_only_eva(superlearner):
 
                 'test_pr_auc': auc(recall_test, precision_test),
 
-                'test_pr_no_skill': len(y_train[y_train == 1]) / len(y_train),
+                'test_pr_no_skill': len(y_test[y_test == 1]) / len(y_test),
                 'test_efron_r2': efron_rsquare(y_test, y_test_pred_prob),
 
                 'test_ffc_r2': ffc_rsquare(true=y_test, train=y_train, pred=y_test_pred_prob),
 
-                'test_briern_r2': efron_rsquare(true=y_test,pred_prob=y_test_pred_prob),
+                'test_briern_r2': brier(true=y_test,pred_prob=y_test_pred_prob),
                 'test_imv_r2': imv(true=y_test, train=y_train, pred_prob=y_test_pred_prob)}
 
     return dict_eva

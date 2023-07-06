@@ -1,15 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from src import Models
 import shap
-from src import params
-from datetime import datetime
-import xgboost
 from pathlib import Path
-from sklearn.model_selection import StratifiedKFold, cross_val_score
-from src import Evaluate
-
-
 
 
 def shap_dict(shap_values_test):
@@ -165,32 +157,27 @@ def shap_values_and_dict(model):
 
     return shap_values_test,shap_dict_
 
+def shap_overall_rank_plot(df_shaps,save_control,var_dict):
 
-"""
-# shap
-model = Models.Model_fixed_test_size(data=df,
-                                     test_size=model_params['test_size'],
-                                     domain_list=model_params['domain_dict']['all'],
-                                     model='lgb',
-                                     train_subset_size=1,
-                                     order=0,
-                                     y_colname=model_params['y_colname'],
-                                     random_state=model_params['random_state'])
+    fontsize_labels = 12
 
+    df_shaps.sort_values(by=['SHARE'], ascending=False, inplace=True)
 
-explainer = shap.TreeExplainer(model.model)
-shap_values_test = explainer(model.X_test)
-shap_dict = shap_dict(shap_values_test)
+    fig, ax = plt.subplots()
+    fig.set_figheight(4)
+    fig.set_figwidth(6)
+    ax.scatter(df_shaps['HRS'], df_shaps['var'], label='HRS', alpha=0.6, marker='^')
+    ax.scatter(df_shaps['SHARE'], df_shaps['var'], label='SHARE', alpha=0.6, marker='1')
+    ax.scatter(df_shaps['COMB'], df_shaps['var'], label='COMB', alpha=0.5, marker='d')
 
-shap_rank_bar_plot(shap_values_test=shap_values_test,
-                   var_dict=model_params['var_dict'],
-                   max_display=shap_values_test.shape[1])
+    ax.grid(axis='both', alpha=0.2)
+    ylabels = [var_dict[y_tick.get_text()] for y_tick in ax.get_yticklabels()]
+    ax.set_yticklabels(ylabels)
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.set_xlabel('mean(|SHAP Value|)', fontsize=fontsize_labels)
 
-top_10_scatter_plot(shap_values_test=shap_values_test,var_dict=model_params['var_dict'],save_control=False)
-
-beeswarm_plot(shap_values_test=shap_values_test,
-              model=model,
-              max_display=10,
-              var_dict=model_params['var_dict'],
-              save_control=False)
-"""
+    ax.legend(bbox_to_anchor=(1, 1), frameon=False)
+    plt.gca().invert_yaxis()
+    if save_control:
+        plt.savefig(Path.cwd() / f'graphs/shap_overall_ranks.pdf')
