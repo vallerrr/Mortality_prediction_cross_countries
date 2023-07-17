@@ -4,20 +4,22 @@ In this chapter, we propose a new predictive research paradigm with Machine Lear
 # Research Route Map 
 ![Research Route Map](https://github.com/vallerrr/OX_thesis/blob/main/graphs/intro/FlowChart.png)
 
-- Predictive:  Apply Super Learners to all four datasets and present their predictive performances. Results of LightGBM and Logistic Regression are also provided for comparisons.
+- Predictive:
+  Apply Super Learners to all four datasets and present their predictive performances. Results of LightGBM and Logistic Regression are also provided for comparisons.
 
 - Holistic:  
-Employ SHAP to deconstruct LightGBM and assess risk importance at the individual risk factor level with HRS, SHARE and Combined dataset . 
-
-Develop a ‘leave-one-out’ algorithm to explore predictive contributions using LightGBM at the domain level for all datasets.
+  1. Employ SHAP to deconstruct LightGBM and assess risk importance at the individual risk factor level with HRS, SHARE and Combined dataset .
+  
+  2. Develop a ‘leave-one-out’ algorithm to explore predictive contributions using LightGBM at the domain level for all datasets.
 
 
 - Precise: 
+
   Splitting the entire dataset into training and testing sets.
   
-  Iteratively subset the training set with increasing proportions. (30% - 100%)
+     1. Iteratively subset the training set with increasing proportions(30% - 100%).
   
-Iteratively and increasingly subset the risk factors (one to 26). 
+     2. Iteratively and increasingly subset the risk factors (one to 26). 
   Then train the model on these subsets to predict the same test set.
   
   Training the same model on 10000 instances of train-test splitting with different seed values and compare the predictive performances.
