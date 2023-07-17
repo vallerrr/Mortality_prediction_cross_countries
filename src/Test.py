@@ -68,13 +68,13 @@ for train_subset_size in np.arange(start, end, step):
         Eva_fixed_test_size_sl.to_csv(f"/gpfs3/users/mills/qlr082/OX_thesis/results/asymptotics_sl_with_random_sampling_on_vars_seed_specified_{start}_{end}_{seed_ind}.csv",index=False)
 
 # part 2 analysis
-'''
+
 import pandas as pd
 import os
 
 
 files = [x for x in os.listdir(os.getcwd()+'/results') if x.startswith('asymptotics_sl_with_random_sampling_on_vars_seed_specified_')]
-
+files.remove("asymptotics_sl_with_random_sampling_on_vars_seed_specified_0.csv")
 df = pd.DataFrame()
 for file in files:
     temp = pd.read_csv(os.getcwd()+f'/results/{file}')
@@ -107,7 +107,6 @@ ploted_col_dict = {
                    'test_efron_r2': 'Efron R2',
                    'test_pr_auc': 'PR-AUC Score',
                    'test_ffc_r2': 'FFC R2',
-
                    'test_imv_r2': 'IMV'}
 
 
@@ -123,7 +122,7 @@ columns = ['test_pr_auc','test_imv_r2','test_efron_r2','test_ffc_r2']
 for (m, n), subplot in np.ndenumerate(axis):
     metric = columns[count]
     pivot_table = df_to_plot.pivot('var_num', 'train_subset_size', metric)
-    sns.heatmap(pivot_table, ax=axis[m, n], cmap='coolwarm_r')
+    sns.heatmap(pivot_table, ax=axis[m, n], cmap=sns.dark_palette("#69d", reverse=False, as_cmap=True))
 
     axis[m, n].set_ylabel('Variable Number',fontsize = fontsize_labels)
     axis[m, n].set_xlabel('Training Set Size',fontsize = fontsize_labels)
@@ -151,6 +150,8 @@ for (m, n), subplot in np.ndenumerate(axis):
 
     count += 1
 fig.tight_layout()
+
+
 plt.savefig(pathlib.Path.cwd()/'graphs/asymptotics_sl.pdf')
-'''
+
 

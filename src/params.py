@@ -37,7 +37,7 @@ def data_reader(source,dataset,bio):
             df.rename(columns={'deathYN': 'death'}, inplace=True)
 
         else:
-            # df = pd.read_csv(file_path+'data_preprocess/Data/merge_data_selected_author_rows_no_missing_versioin_3.csv')
+            # df = pd.read_csv(file_path+'data_preprocess/data/merge_data_selected_author_rows_no_missing_versioin_3.csv')
             df = pd.read_csv(data_path/'model_used_data/df_by_us.csv')
         if dataset == 'HRS':
             df = df.loc[df['age'] >= 50, ]

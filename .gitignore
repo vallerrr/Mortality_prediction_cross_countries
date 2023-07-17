@@ -1,9 +1,11 @@
 .DS_Store
-/Data/
+/data/
 *.pyc
-data_preprocess_src/vars_found_in_raw/SHARE.csv
+data/data_preprocess_src/vars_found_in_raw/SHARE.csv
 src/temp.ipynb
 src/__pycache__/
 src/.ipynb_checkpoints/
 *.pyc
 /results/
+/src/writing_sample/
+/writing_sample_graphs/
