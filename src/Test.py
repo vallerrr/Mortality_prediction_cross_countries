@@ -73,15 +73,21 @@ import pandas as pd
 import os
 
 
-files = [x for x in os.listdir(os.getcwd()+'/results') if x.startswith('asymptotics_sl_with_random_sampling_on_vars_seed_specified_')]
+files = [x for x in os.listdir(os.getcwd()+'/sl') if x.startswith('asymptotics_sl_with_random_sampling_on_vars_seed_specified_')]
 files.remove("asymptotics_sl_with_random_sampling_on_vars_seed_specified_0.csv")
 df = pd.DataFrame()
 for file in files:
-    temp = pd.read_csv(os.getcwd()+f'/results/{file}')
+    file_num = int(file[len(file)-5:len(file)-4])
+    temp = pd.read_csv(os.getcwd()+f'/sl/{file}')
+    temp['seed'] = seeds[file_num]
     if file  == 'asymptotics_sl_with_random_sampling_on_vars_seed_specified_0.3_0.4_0.csv':
         temp = temp.loc[~temp['train_subset_size']== 22766]
     df = pd.concat([df,temp],axis=0)
     del(temp)
+
+
+df_avg = df.groupby(['var_num','train_subset_size']).mean()
+df_avg.reset_index(inplace=True)
 
 # plot
 import numpy as np
@@ -94,7 +100,7 @@ for column in df.columns:
     if 'test' in column:
         columns.append(column)
 
-df_to_plot = df.drop_duplicates(subset=['train_subset_size','var_num']).copy()
+df_to_plot = df_avg.drop_duplicates(subset=['train_subset_size', 'var_num']).copy()
 df_to_plot.reset_index(inplace=True,drop=True)
 
 
@@ -151,7 +157,7 @@ for (m, n), subplot in np.ndenumerate(axis):
     count += 1
 fig.tight_layout()
 
-
+plt.show()
 plt.savefig(pathlib.Path.cwd()/'graphs/asymptotics_sl.pdf')
 
 
