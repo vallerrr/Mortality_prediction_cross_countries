@@ -11,4 +11,5 @@ src/.ipynb_checkpoints/
 /graphs/
 /src/writing_sample/
 /src/developing/
-.gitignore
+/writing_sample_graphs/
+.idea
