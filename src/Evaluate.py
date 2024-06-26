@@ -6,7 +6,6 @@ from sklearn.metrics import f1_score, precision_recall_curve, auc, roc_auc_score
 def acc(y, yhat):
     return np.sum(np.abs(y - yhat) / y) / len(yhat)
 
-
 def r2(y, yhat):
     return 1 - (np.sum(y - yhat) ** 2 / np.sum(y - np.mean(y)) ** 2)
 
@@ -64,7 +63,12 @@ def evaluate_metric(true, pred, pred_prob, train):
     metric_dict['imv'] = get_ew(get_w(ll(true, np.mean(train))), get_w(ll(true, pred_prob)))
     return metric_dict
 
-
+def evaluate_cox_pred(true,pred_prob):
+    metric_dict = {}
+    metric_dict['efron_r2'] = efron_rsquare(true, pred_prob)
+    metric_dict['brier'] = brier(true, pred_prob)
+    # metric_dict['roc_auc'] = roc_auc_score(true, pred_prob)
+    return metric_dict
 
 def pseudo_rmse(pred, true, train):
     numerator = np.sum((true-pred).pow(2))

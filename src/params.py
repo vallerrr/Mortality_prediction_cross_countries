@@ -3,85 +3,6 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 import os
-def confirm_cwd(platform):
-    if platform == 'jupyter':
-        os.chdir(Path.cwd().parent)
-    print(f"cwd: {Path.cwd()}")
-
-# data reader
-def data_reader(source,dataset,bio):
-    """
-    read data 
-    @param bio: whether this is a bio dataset 
-    @param source: {author,us}
-    @param dataset: {HRS,SHARE,CHARLES}
-    @return: selected dataset 
-    """
-
-    # note that for SHARE, data_by_us.csv = recoded_data_wave_1_no_missing.csv
-
-    data_path = Path.cwd() / f'Data/{dataset}'
-    if source == 'author':
-        if bio:
-            df = pd.read_csv(data_path/'model_used_data/bio_all_raw_columns_no_missing.csv')
-        else:
-            df = pd.read_csv("/Users/valler/OneDrive - Nexus365/Replication/Python_hrsPsyMort_20190208.csv", index_col=0)
-        df['ZincomeT'] = np.where(df['Zincome'] >= 1.80427, 1.80427, df['Zincome'])
-        df['ZwealthT'] = np.where(df['Zwealth'] >= 3.49577, 3.49577, df['Zwealth'])
-
-    else:
-
-        if bio:
-            df = pd.read_csv(data_path/'model_used_data/df_by_us_bio.csv')
-            df['eversmokeYN'] = df['eversmokeYN'] * -1
-            df.rename(columns={'deathYN': 'death'}, inplace=True)
-
-        else:
-            # df = pd.read_csv(file_path+'data_preprocess/data/merge_data_selected_author_rows_no_missing_versioin_3.csv')
-            df = pd.read_csv(data_path/'model_used_data/df_by_us.csv')
-        if dataset == 'HRS':
-            df = df.loc[df['age'] >= 50, ]
-            df.rename(columns={'deathYear': 'death_year', 'deathMonth': 'death_month'}, inplace=True)
-            df['deathYR'] = df['death_year'] + df['death_month'] / 12
-
-
-    return df
-
-def standardise(col,df):
-    df[col]-=df[col].mean()
-    df[col]/=df[col].std()
-    return df
-def read_merged_data():
-    """
-     merge HRS and SHARE without any treatment
-    @return: the merged dataset and domain_lst (intersections)
-    """
-
-    df_HRS = data_reader(source='us', dataset='HRS', bio=False)
-    df_SHARE = data_reader(source='us', dataset='SHARE', bio=False)
-    df_ELSA = data_reader(source='us', dataset='SHARE', bio=False)
-
-    # wealth pre-treat
-    q = 30
-    df_HRS['ZwealthT'] = pd.cut(df_HRS['ZwealthT'], bins=q, labels=False)
-    df_SHARE['ZwealthT'] = pd.cut(df_SHARE['ZwealthT'], bins=q, labels=False)
-    df_ELSA['ZwealthT'] = pd.cut(df_ELSA['ZwealthT'], bins=q, labels=False)
-
-    # label data
-    df_HRS['dataset'] = 0
-    df_SHARE['dataset'] = 1
-    df_ELSA['dataset'] = 2
-
-    # merge without treatment
-    df = pd.merge(left=df_SHARE, right=df_HRS, how='outer')
-    df = pd.merge(left=df, right=df_ELSA, how='outer')
-
-    domain_lst = list(set(df_HRS.columns).intersection(set(df_SHARE.columns)).intersection(set(df_ELSA.columns)))
-    domain_lst.remove('death')
-    domain_lst.remove('hhid')
-    domain_lst.remove('pn')
-
-    return df, domain_lst
 
 
 domain_dict = {'demographic': ['maleYN', 'blackYN', 'hispanicYN', 'migrantYN', 'age'],
@@ -245,6 +166,130 @@ model_params = {"random_state": 87785,
                 'test_size':0.3,
                 'y_colname':'death'}
 
+
+
+
+
+
+def confirm_cwd(platform):
+    if platform == 'jupyter':
+        os.chdir(Path.cwd().parent)
+    print(f"cwd: {Path.cwd()}")
+
+# data reader
+def data_reader(source,dataset,bio):
+    """
+    read data
+    @param bio: whether this is a bio dataset
+    @param source: {author,us}
+    @param dataset: {HRS,SHARE,CHARLES}
+    @return: selected dataset
+    """
+
+    # note that for SHARE, data_by_us.csv = recoded_data_wave_1_no_missing.csv
+
+    data_path = Path.cwd() / f'Data/{dataset}'
+    if source == 'author':
+        if bio:
+            df = pd.read_csv(data_path/'model_used_data/bio_all_raw_columns_no_missing.csv')
+        else:
+            df = pd.read_csv("/Users/valler/OneDrive - Nexus365/Replication/Python_hrsPsyMort_20190208.csv", index_col=0)
+        df['ZincomeT'] = np.where(df['Zincome'] >= 1.80427, 1.80427, df['Zincome'])
+        df['ZwealthT'] = np.where(df['Zwealth'] >= 3.49577, 3.49577, df['Zwealth'])
+
+    else:
+
+        if bio:
+            df = pd.read_csv(data_path/'model_used_data/df_by_us_bio.csv')
+            df['eversmokeYN'] = df['eversmokeYN'] * -1
+            df.rename(columns={'deathYN': 'death'}, inplace=True)
+
+        else:
+            # df = pd.read_csv(file_path+'data_preprocess/data/merge_data_selected_author_rows_no_missing_versioin_3.csv')
+            df = pd.read_csv(data_path/'model_used_data/df_by_us.csv')
+        if dataset == 'HRS':
+            df = df.loc[df['age'] >= 50, ]
+            df.rename(columns={'deathYear': 'death_year', 'deathMonth': 'death_month'}, inplace=True)
+            df['deathYR'] = df['death_year'] + df['death_month'] / 12
+
+
+    return df
+
+def standardise(col,df):
+    df[col]-=df[col].mean()
+    df[col]/=df[col].std()
+    return df
+def read_merged_data(type):
+    """
+    type:
+        1: HRS+SHARE+ELSA
+        2. HRS+SHARE
+        3. HRS+ELSA
+        4. SHARE+ELSA
+
+     merge HRS and SHARE and ELSA without any treatment
+    @return: the merged dataset and domain_lst (intersections)
+    """
+
+    df_HRS = data_reader(source='us', dataset='HRS', bio=False)
+    df_SHARE = data_reader(source='us', dataset='SHARE', bio=False)
+    df_SHARE = df_SHARE.loc[(df_SHARE['deathY']>2005)|( df_SHARE['death']==0),]
+    df_ELSA = data_reader(source='us', dataset='ELSA', bio=False)
+
+    # wealth pre-treat
+    q = 30
+    df_HRS['ZwealthT'] = pd.cut(df_HRS['ZwealthT'], bins=q, labels=False)
+    df_SHARE['ZwealthT'] = pd.cut(df_SHARE['ZwealthT'], bins=q, labels=False)
+    df_ELSA['ZwealthT'] = pd.cut(df_ELSA['ZwealthT'], bins=q, labels=False)
+
+    # label data
+    df_HRS['dataset'] = 0
+    df_SHARE['dataset'] = 1
+    df_ELSA['dataset'] = 2
+
+
+    if type ==1:
+        # 1: HRS + SHARE + ELSA
+        # merge without treatment
+        df = pd.merge(left=df_SHARE, right=df_HRS, how='outer')
+        df = pd.merge(left=df, right=df_ELSA, how='outer')
+
+        ELSA_columns = list(set(domain_dict['all']).intersection(set(df_ELSA.columns)))
+        HRS_columns = list(set(domain_dict['all']).intersection(set(df_HRS.columns)))
+        SHARE_columns = list(set(domain_dict['all']).intersection(set(df_SHARE.columns)))
+        domain_lst = list(set(HRS_columns).intersection(set(SHARE_columns)).intersection(set(ELSA_columns)))
+
+    elif type ==2:
+        # 2. HRS+SHARE
+        df = pd.merge(left=df_SHARE, right=df_HRS, how='outer')
+
+        HRS_columns = list(set(domain_dict['all']).intersection(set(df_HRS.columns)))
+        SHARE_columns = list(set(domain_dict['all']).intersection(set(df_SHARE.columns)))
+
+        domain_lst = list(set(HRS_columns).intersection(set(SHARE_columns)))
+
+    elif type ==3:
+        # 3. HRS+ELSA
+        df = pd.merge(left=df_ELSA, right=df_HRS, how='outer')
+
+        ELSA_columns = list(set(domain_dict['all']).intersection(set(df_ELSA.columns)))
+        HRS_columns = list(set(domain_dict['all']).intersection(set(df_HRS.columns)))
+
+        domain_lst = list(set(HRS_columns).intersection(set(ELSA_columns)))
+    else:
+        # 4. SHARE + ELSA
+        df = pd.merge(left=df_SHARE, right=df_ELSA, how='outer')
+
+        ELSA_columns = list(set(domain_dict['all']).intersection(set(df_ELSA.columns)))
+        SHARE_columns = list(set(domain_dict['all']).intersection(set(df_SHARE.columns)))
+
+        domain_lst = list(set(ELSA_columns).intersection(set(SHARE_columns)))
+
+    for column in ['death','pn','hhid']:
+        if column in domain_lst:
+            domain_lst.remove(column)
+
+    return df, domain_lst
 
 
 
