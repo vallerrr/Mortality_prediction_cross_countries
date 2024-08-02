@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import shap
 from pathlib import Path
-
+import pandas as pd
 
 def shap_dict(shap_values_test):
     """
@@ -157,6 +157,27 @@ def shap_values_and_dict(model):
 
     return shap_values_test,shap_dict_
 
+def shap_values_and_dict_all(model):
+    explainer = shap.TreeExplainer(model.model)
+    # training set
+    shap_values = explainer(model.X_train)
+    df_shap_data = pd.DataFrame(shap_values.data, columns=shap_values.feature_names)
+    df_shap_values = pd.DataFrame(shap_values.values[:, :, 1], columns=[f'{x}_shap' for x in shap_values.feature_names])
+    df_shap_data = pd.concat([df_shap_data, df_shap_values], axis=1)
+    df_shap_data['dataset'] = ['train']*len(df_shap_data)
+
+    # testing set
+    shap_values  = explainer(model.X_test)
+    df_shap_data_test = pd.DataFrame(shap_values.data, columns=shap_values.feature_names)
+    df_shap_values_test = pd.DataFrame(shap_values.values[:, :, 1], columns=[f'{x}_shap' for x in shap_values.feature_names])
+    df_shap_data_test = pd.concat([df_shap_data_test, df_shap_values_test], axis=1)
+    df_shap_data_test['dataset'] = ['test'] * len(df_shap_data_test)
+
+    # merge
+    df = pd.concat([df_shap_data,df_shap_data_test],axis = 0)
+    return df
+
+
 def shap_overall_rank_plot(df_shaps,save_control,var_dict):
 
     fontsize_labels = 12
@@ -181,3 +202,4 @@ def shap_overall_rank_plot(df_shaps,save_control,var_dict):
     plt.gca().invert_yaxis()
     if save_control:
         plt.savefig(Path.cwd() / f'graphs/shap_overall_ranks.pdf')
+

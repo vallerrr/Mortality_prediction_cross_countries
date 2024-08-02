@@ -2,7 +2,8 @@ import numpy as np
 import sklearn.metrics as metrics
 import pandas as pd
 from scipy.optimize import minimize
-from sklearn.metrics import f1_score, precision_recall_curve, auc, roc_auc_score
+from sklearn.metrics import f1_score, precision_recall_curve, auc, roc_auc_score,fbeta_score
+beta = 2
 def acc(y, yhat):
     return np.sum(np.abs(y - yhat) / y) / len(yhat)
 
@@ -15,7 +16,8 @@ def seed_evaluate_metric(true, pred, pred_prob, train):
     metric_dict = {}
     fpr, tpr, threshold = metrics.roc_curve(true, pred, pos_label=1)
     metric_dict['auc'] = metrics.auc(fpr, tpr)  # pr_auc
-    metric_dict['f1'] = metrics.f1_score(true, pred)
+    metric_dict['f1'] = f1_score(true, pred,average='micro')
+    metric_dict['fb'] =fbeta_score(true, pred, beta=beta)
     metric_dict['efron_r2'] = efron_rsquare(true, pred_prob)
     metric_dict['ffc_r2'] = ffc_rsquare(true, pred_prob, train)  # TODO: pred_prob or pred?
     metric_dict['brier'] = brier(true, pred_prob)
@@ -54,7 +56,8 @@ def evaluate_metric(true, pred, pred_prob, train):
     metric_dict = {}
     fpr, tpr, threshold = metrics.roc_curve(true, pred, pos_label=1)
     metric_dict['auc'] = metrics.auc(fpr, tpr)  # pr_auc
-    metric_dict['f1'] = metrics.f1_score(true, pred)
+    metric_dict['f1'] = metrics.f1_score(true, pred,average='micro')
+    metric_dict['fb'] = metrics.fbeta_score(true, pred, beta=beta)
     metric_dict['efron_r2'] = efron_rsquare(true, pred_prob)
     metric_dict['ffc_r2'] = ffc_rsquare(true, pred_prob, train)  # TODO: pred_prob or pred?
     metric_dict['brier'] = brier(true, pred_prob)
@@ -142,19 +145,20 @@ class metric():
                 train_set_weight = model.train_sample_weight
 
                 # train set
-                self.train_f1_score_label = metrics.f1_score(y_train, train_set_pred, sample_weight=train_set_weight)
+                self.train_f1_score_label = metrics.f1_score(y_train, train_set_pred, sample_weight=train_set_weight,average='micro')
                 self.train_confusion_label = metrics.confusion_matrix(y_train, train_set_pred, sample_weight=train_set_weight)
                 self.train_roc_auc_score_label = metrics.roc_auc_score(y_train, train_set_pred, sample_weight=train_set_weight)
 
             # test set calculated with label
-            self.test_f1_score_label = metrics.f1_score(y_test, y_test_pred_label, sample_weight=test_set_weight)
+            self.test_f1_score_label = metrics.f1_score(y_test, y_test_pred_label, sample_weight=test_set_weight,average='micro')
+            self.test_fb_score_label = metrics.fbeta_score(y_test, y_test_pred_label, sample_weight=train_set_weight,beta=beta)
             self.test_confusion_label = metrics.confusion_matrix(y_test, y_test_pred_label, sample_weight=test_set_weight)
             self.test_roc_auc_score_label = metrics.roc_auc_score(y_test, y_test_pred_label, sample_weight=test_set_weight)
 
             # test set calculated with prob
             # pr part
             self.precision_test, self.recall_test, _ = precision_recall_curve(y_test, y_test_pred_prob, sample_weight=test_set_weight)
-            self.pr_f1, self.pr_auc = f1_score(y_test, y_test_pred_label, sample_weight=test_set_weight), auc(self.recall_test, self.precision_test)
+            self.pr_f1, self.pr_auc = f1_score(y_test, y_test_pred_label, sample_weight=test_set_weight,average='micro'), auc(self.recall_test, self.precision_test)
             self.pr_no_skill = len(y_test[y_test == 1]) / len(y_test)
             self.r2_score = r2(model.y_test, y_test_pred_label)
             self.brier = brier(model.y_test, y_test_pred_prob)
@@ -163,20 +167,22 @@ class metric():
             self.imv = imv(true=y_test,train=y_train,pred_prob=y_test_pred_prob)
         else:
             if train_set_control:
-                self.train_f1_score_label = metrics.f1_score(y_train, train_set_pred)
+                self.train_f1_score_label = metrics.f1_score(y_train, train_set_pred,average='micro')
                 self.train_confusion_label = metrics.confusion_matrix(y_train, train_set_pred)
                 self.train_roc_auc_score_label = metrics.roc_auc_score(y_train, train_set_pred)
 
             # test set calculated with label
-            self.test_f1_score_label = metrics.f1_score(y_test, y_test_pred_label)
+            self.test_f1_score_label = metrics.f1_score(y_test, y_test_pred_label,average='micro')
+            self.test_fb_score_label = fbeta_score(y_test, y_test_pred_label, beta=beta)
             self.test_confusion_label = metrics.confusion_matrix(y_test, y_test_pred_label)
             self.test_roc_auc_score_label = metrics.roc_auc_score(y_test, y_test_pred_label)
 
             # test set calculated with prob
             # pr part
             self.precision_test, self.recall_test, _ = precision_recall_curve(y_test, y_test_pred_prob)
-            self.pr_f1, self.pr_auc = f1_score(y_test, y_test_pred_label), \
+            self.pr_f1, self.pr_auc = f1_score(y_test, y_test_pred_label,average='micro'), \
                                       auc(self.recall_test, self.precision_test)
+
             self.pr_no_skill = len(y_train[y_train == 1]) / len(y_train)
 
             self.r_score = r2(y_test, y_test_pred_label)
@@ -189,7 +195,7 @@ class metric():
             self.imv = imv(true=y_test, train=y_train, pred_prob=y_test_pred_prob)
 
 def print_model_fits(evas):
-    print(f'imv={evas.imv},\nroc-auc={evas.auc_score},\npr-auc={evas.pr_auc},\nf1={evas.pr_f1},\nefron_r2={evas.efron_rsquare},\nffc_r2={evas.ffc_r2},\nIP={evas.pr_no_skill}')
+    print(f'imv={evas.imv},\nroc-auc={evas.auc_score},\npr-auc={evas.pr_auc},\nf1={evas.pr_f1},\nfb={evas.test_fb_score_label},\nefron_r2={evas.efron_rsquare},\nffc_r2={evas.ffc_r2},\nIP={evas.pr_no_skill}')
 
 def sl_eva(superlearner):
     models = list(superlearner.base_models.keys()) + ['sl']
@@ -197,22 +203,23 @@ def sl_eva(superlearner):
     y_train = superlearner.y_train['death']
     y_test = df_base_pred['ori_data']
 
-    df_eva = pd.DataFrame(columns=['model', 'pr_auc', 'roc_auc', 'f1', 'efron', 'ffc', 'ip','imv'])
+    df_eva = pd.DataFrame(columns=['model', 'pr_auc', 'roc_auc', 'f1','fb', 'efron', 'ffc', 'ip','imv'])
     for model in models:
         y_test_pred_prob = df_base_pred[model]
         y_test_pred_label = df_base_pred[f'{model}_label']
         precision_test, recall_test, _ = precision_recall_curve(y_test, y_test_pred_prob)
         pr_auc = auc(recall_test, precision_test)
         roc_auc = roc_auc_score(y_test, y_test_pred_prob)
-        f1 = f1_score(y_test, y_test_pred_label)
+        f1 = f1_score(y_test, y_test_pred_label,average='micro')
         # f1 = None
+        fb = fbeta_score(y_test, y_test_pred_label, beta=beta)
         ffc = ffc_rsquare(true=y_test, train=y_train, pred=y_test_pred_prob)
         efron = efron_rsquare(y_test, y_test_pred_prob)
 
         imv_ = imv(true=y_test,train=y_train,pred_prob=y_test_pred_prob)
         ip = len(y_train[y_train == 1]) / len(y_train)
 
-        df_eva.loc[len(df_eva)] = [model, pr_auc, roc_auc, f1, efron, ffc, ip, imv_]
+        df_eva.loc[len(df_eva)] = [model, pr_auc, roc_auc, f1,fb, efron, ffc, ip, imv_]
     return df_eva
 
 
@@ -228,7 +235,8 @@ def sl_only_eva(superlearner):
     precision_test, recall_test, _ = precision_recall_curve(y_test, y_test_pred_prob)
 
     dict_eva = {'test_auc_score': roc_auc_score(y_test, y_test_pred_prob),
-                'test_f1_score': f1_score(y_test, y_test_pred_label),
+                'test_f1_score': f1_score(y_test, y_test_pred_label,average='micro'),
+                'test_fb_score': fbeta_score(y_test, y_test_pred_label, beta=beta),
 
                 'test_pr_auc': auc(recall_test, precision_test),
 

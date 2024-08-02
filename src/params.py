@@ -213,6 +213,7 @@ def data_reader(source,dataset,bio):
             df['deathYR'] = df['death_year'] + df['death_month'] / 12
 
 
+    df = df.loc[df['age'] >= 50,]
     return df
 
 def standardise(col,df):
