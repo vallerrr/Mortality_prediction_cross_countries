@@ -49,9 +49,20 @@ class Model_fixed_test_size():
                                                                                 test_size=test_size,
                                                                                 random_state=random_state)
         # if we only need a subset of the training set train_subset_size!=0
-        self.X_train = self.X_train.sample(n=int(train_subset_size * len(self.X_train)), random_state=random_state)
+
+        if "train_on_ELSA_first" in model_params.keys():
+            n = int(train_subset_size * len(self.X_train))
+            train_set_ELSA_proportion = len(self.X_train.loc[data['dataset'] == 2])
+            if n <= train_set_ELSA_proportion:
+                self.X_train = self.X_train.loc[data['dataset'] == 2].sample(n=n, random_state=random_state) # 2 is ELSA, 0 is HRS
+            else:
+                self.X_train = pd.concat([self.X_train.loc[data['dataset'] == 2],self.X_train.loc[data['dataset'] == 0 ].sample(n=n-train_set_ELSA_proportion, random_state=random_state)],axis=0)
+        else:
+
+            self.X_train = self.X_train.sample(n=int(train_subset_size * len(self.X_train)), random_state=random_state)
 
         self.y_train = self.y_train.loc[self.X_train.index]
+
         if 'sampWeight' in list(self.X_train.columns):
             self.samp_weight_control = True
             self.train_sample_weight = self.X_train['sampWeight']

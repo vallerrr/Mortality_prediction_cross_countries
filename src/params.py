@@ -108,7 +108,7 @@ var_dict = {"maleYN": "Male",
                 "Zneighsafety": "Lower Neighborhood Safety",
                 "Zneighcohesion": "Lower Neighborhood Cohesion",
                 "Zneighdisorder": "Neighborhood Disorder",
-                "vigactivityYN": "Low/No Vigorous Activity",
+                "vigactivityYN": "Low/No Moderate Activity",
                 "modactivityYN": "Low/No Moderate Activity",
                 "alcoholYN": "Alcohol Abuse",
                 "sleepYN": "Sleep Problems",
@@ -211,7 +211,8 @@ def data_reader(source,dataset,bio):
             df = df.loc[df['age'] >= 50, ]
             df.rename(columns={'deathYear': 'death_year', 'deathMonth': 'death_month'}, inplace=True)
             df['deathYR'] = df['death_year'] + df['death_month'] / 12
-
+        if dataset =='SHARE':
+            df = df.loc[(df['deathY'] >= 2006) | (df['death'] == 0),]
 
     df = df.loc[df['age'] >= 50,]
     return df
