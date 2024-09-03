@@ -152,7 +152,7 @@ def beeswarm_plot(shap_values_test,model,max_display,var_dict,save_control=False
 
 def shap_values_and_dict(model):
     explainer = shap.TreeExplainer(model.model)
-    shap_values_test = explainer(model.X_test)
+    shap_values_test = explainer(pd.concat([model.X_train,model.X_test]))
     shap_dict_ = shap_dict(shap_values_test)
 
     return shap_values_test,shap_dict_
