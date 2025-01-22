@@ -14,7 +14,18 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
 from sklearn.metrics import confusion_matrix
 import sklearn.metrics as metrics
+import random
+random.seed(87785)
+np.random.seed(87785)
+print(f"LightGBM version: {LGB.__version__}")
+print(f"XGBoost version: {XGB.__version__}")
+print(f"NumPy version: {np.__version__}")
 
+
+import os
+os.environ['OMP_NUM_THREADS'] = '1'
+os.environ['MKL_NUM_THREADS'] = '1'
+os.environ['XGB_PRECISION'] = '1e-7'
 
 
 def polynominal(df, order):
@@ -42,7 +53,7 @@ class Model_fixed_test_size():
             domain_list = domain
         y_colname = model_params['y_colname']
         random_state = model_params['random_state']
-        # print(f'seed is {random_state}')
+        #print(f'seed is {random_state}')
 
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(data[domain_list],
                                                                                 data[y_colname],
@@ -51,6 +62,7 @@ class Model_fixed_test_size():
         # if we only need a subset of the training set train_subset_size!=0
 
         if "train_on_ELSA_first" in model_params.keys():
+            print('train on ELSA first')
             n = int(train_subset_size * len(self.X_train))
             train_set_ELSA_proportion = len(self.X_train.loc[data['dataset'] == 2])
             if n <= train_set_ELSA_proportion:
@@ -81,7 +93,7 @@ class Model_fixed_test_size():
         #  print('Train set number {}'.format(self.X_train.shape))
         if model == 'lgb':
             if self.samp_weight_control:
-                self.model = LGB.LGBMClassifier()
+                self.model = LGB.LGBMClassifier(random_state=random_state, n_jobs=1,subsample=1.0,colsample_bytree=1.0)
                 self.model.fit(X=self.X_train,
                                y=self.y_train,
                                sample_weight=self.train_sample_weight)
@@ -94,7 +106,7 @@ class Model_fixed_test_size():
 
             else:
                 #print('no SampWeight')
-                self.model = LGB.LGBMClassifier()
+                self.model = LGB.LGBMClassifier(random_state=random_state, n_jobs=1,subsample=1.0,colsample_bytree=1.0)
                 self.model.fit(X=self.X_train,
                                y=self.y_train)
                 #print('test')
@@ -107,7 +119,17 @@ class Model_fixed_test_size():
         if model == 'xgb':
             if self.samp_weight_control:
                 # print('with sample weight')
-                self.model = XGB.XGBClassifier()#,use_label_encoder=False
+                self.model = XGB.XGBClassifier(random_state=random_state,
+                                               subsample=1.0,  # Use all rows for each boosting iteration
+                                               colsample_bytree=1.0,  # Use all features for each tree
+                                               colsample_bylevel=1.0,  # Use all features at each tree level
+                                               colsample_bynode=1.0,  # Use all features for each tree node
+                                               max_bin=256,  # Fix number of bins for feature discretization
+                                               n_jobs=1,  # Single-threaded execution
+                                               tree_method='exact',  # Exact tree construction
+                                               grow_policy='depthwise',  # Fixed growth policy
+                                               max_depth=6,  # Maximum depth of each tree
+                                               learning_rate=0.1)#,use_label_encoder=False
                 self.model.fit(X=self.X_train,
                                y=self.y_train,
                                sample_weight=self.train_sample_weight)
@@ -117,7 +139,17 @@ class Model_fixed_test_size():
                 self.test_set_predict_prob = self.model.predict_proba(self.X_test)[:, 1]
             else:
                 # print('without sample weight')
-                self.model = XGB.XGBClassifier()#,use_label_encoder=False)
+                self.model = XGB.XGBClassifier(random_state=random_state,
+                                               subsample=1.0,  # Use all rows for each boosting iteration
+                                               colsample_bytree=1.0,  # Use all features for each tree
+                                               colsample_bylevel=1.0,  # Use all features at each tree level
+                                               colsample_bynode=1.0,  # Use all features for each tree node
+                                               max_bin=256,  # Fix number of bins for feature discretization
+                                               n_jobs=1,  # Single-threaded execution
+                                               tree_method='exact',  # Exact tree construction
+                                               grow_policy='depthwise',  # Fixed growth policy
+                                               max_depth=6,  # Maximum depth of each tree
+                                               learning_rate=0.1)#,use_label_encoder=False#,use_label_encoder=False)
                 self.model.fit(X=self.X_train,
                                y=self.y_train)
                 self.train_set_predict = self.model.predict(self.X_train)
@@ -126,7 +158,7 @@ class Model_fixed_test_size():
                 self.test_set_predict_prob = self.model.predict_proba(self.X_test)[:, 1]
 
         if model == 'logreg':
-            self.model = LogisticRegression()
+            self.model = LogisticRegression(random_state=random_state)
             self.model.fit(X=self.X_train,
                            y=self.y_train,
                            sample_weight=self.train_sample_weight)
@@ -139,7 +171,7 @@ class Model_fixed_test_size():
             domain = list(
                 set(domain_list + ['age', 'death', 'sampWeight', 'hhid', 'maleYN', 'blackYN', 'hispanicYN', 'otherYN',
                                'migrantYN']))
-            self.X_train, self.X_test = train_test_split(data, test_size=test_size, random_state=random_state)
+            self.X_train, self.X_test = train_test_split(data, test_size=test_size, random_state=87785)
             self.X_train = self.X_train[domain]
             self.X_test = self.X_test[domain]
 

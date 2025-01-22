@@ -4,6 +4,11 @@ import pandas as pd
 from scipy.optimize import minimize
 from sklearn.metrics import f1_score, precision_recall_curve, auc, roc_auc_score,fbeta_score
 beta = 2
+import os
+os.environ['OMP_NUM_THREADS'] = '1'
+os.environ['MKL_NUM_THREADS'] = '1'
+
+
 def acc(y, yhat):
     return np.sum(np.abs(y - yhat) / y) / len(yhat)
 
@@ -27,7 +32,7 @@ def seed_evaluate_metric(true, pred, pred_prob, train):
 
 def ll(x, p):
     """x is the truth, p is the guess"""
-    z = (np.log(p) * x) + (np.log(1 - p) * (1 - x))
+    z = (np.log(np.round(p, decimals=8)) * x) + (np.log(1 - np.round(p, decimals=8)) * (1 - x))
     return np.exp(np.sum(z) / len(z))
 
 
@@ -136,7 +141,7 @@ class metric():
         y_train = model.y_train
         y_test = model.y_test
         y_test_pred_label = model.test_set_predict
-        y_test_pred_prob = model.test_set_predict_prob
+        y_test_pred_prob = np.round(model.test_set_predict_prob, decimals=8)
 
 
         if model.samp_weight_control:

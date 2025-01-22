@@ -208,9 +208,12 @@ def data_reader(source,dataset,bio):
             # df = pd.read_csv(file_path+'data_preprocess/data/merge_data_selected_author_rows_no_missing_versioin_3.csv')
             df = pd.read_csv(data_path/'model_used_data/df_by_us.csv')
         if dataset == 'HRS':
+            # old dataset
             df = df.loc[df['age'] >= 50, ]
             df.rename(columns={'deathYear': 'death_year', 'deathMonth': 'death_month'}, inplace=True)
             df['deathYR'] = df['death_year'] + df['death_month'] / 12
+            # new dataset
+            df = pd.read_pickle('/Users/valler/Python/OX_Thesis/OX_thesis/data/HRS/data_preprocess/Data/merge_data_not_standardise_no_missing.pkl')
         if dataset =='SHARE':
             df = df.loc[(df['deathY'] >= 2006) | (df['death'] == 0),]
 
@@ -233,7 +236,8 @@ def read_merged_data(type):
     @return: the merged dataset and domain_lst (intersections)
     """
 
-    df_HRS = data_reader(source='us', dataset='HRS', bio=False)
+    # df_HRS = data_reader(source='us', dataset='HRS', bio=False)
+    df_HRS = pd.read_pickle('/Users/valler/Python/OX_Thesis/OX_thesis/data/HRS/data_preprocess/Data/merge_data_not_standardise_no_missing.pkl')
     df_SHARE = data_reader(source='us', dataset='SHARE', bio=False)
     df_SHARE = df_SHARE.loc[(df_SHARE['deathY']>2005)|( df_SHARE['death']==0),]
     df_ELSA = data_reader(source='us', dataset='ELSA', bio=False)

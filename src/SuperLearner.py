@@ -18,20 +18,20 @@ from sklearn.model_selection import StratifiedKFold, train_test_split
 
 
 # models
-def get_models():
+def get_models(random_state):
     models = {}
-    models['XGB'] = XGB.XGBClassifier()
-    models['LGB'] = LGBM.LGBMClassifier()
-    models['SGD'] = SGDClassifier(loss='log_loss')
-    models['DecisionTree'] = DecisionTreeClassifier()
-    models['AdaBoost'] = AdaBoostClassifier()
-    models['LogisticRegression'] = LogisticRegression(solver='liblinear')
-    models['SVC'] = SVC(gamma='scale', probability=True)
+    models['XGB'] = XGB.XGBClassifier(random_state=random_state)
+    models['LGB'] = LGBM.LGBMClassifier(random_state=random_state)
+    models['SGD'] = SGDClassifier(loss='log_loss',random_state=random_state)
+    models['DecisionTree'] = DecisionTreeClassifier(random_state=random_state)
+    models['AdaBoost'] = AdaBoostClassifier(random_state=random_state)
+    models['LogisticRegression'] = LogisticRegression(solver='liblinear',random_state=random_state)
+    models['SVC'] = SVC(gamma='scale', probability=True,random_state=random_state)
     models['Gaussian'] = GaussianNB()
     models['KNeighbors'] = KNeighborsClassifier()
-    models['Bagging'] = BaggingClassifier(n_estimators=10)
-    models['RandomForest'] = RandomForestClassifier(n_estimators=10)
-    models['ExtraTrees'] = ExtraTreesClassifier(n_estimators=10)
+    models['Bagging'] = BaggingClassifier(n_estimators=10,random_state=random_state)
+    models['RandomForest'] = RandomForestClassifier(n_estimators=10,random_state=random_state)
+    models['ExtraTrees'] = ExtraTreesClassifier(n_estimators=10,random_state=random_state)
     return models
 
 
@@ -41,7 +41,7 @@ def meta_model(df_pred):
     @param df_pred:
     @return:
     """
-    X = df_pred[list(get_models().keys())]
+    X = df_pred[list(get_models(random_state=1).keys())]
     y = list(df_pred['ori_data'])
 
     # model = LinearRegression()
@@ -55,7 +55,7 @@ def meta_data_generation(X, y, y_colname, k, domain_list, random_state):
     generate meta data to develop meta model
     """
 
-    models = get_models()
+    models = get_models(random_state)
     kfold = StratifiedKFold(n_splits=k, random_state=random_state, shuffle=True)
     df_pred = pd.DataFrame(columns=['fold', 'ori_data'] + list(models.keys()))
 
@@ -122,7 +122,7 @@ class superlearner():
 
         # store the predictions made by metamodels
 
-        self.base_models, self.df_base_pred = base_model_prediction(base_models=get_models(),
+        self.base_models, self.df_base_pred = base_model_prediction(base_models=get_models(random_state),
                                                                     X=self.X_train[domain_list],
                                                                     X_test=self.X_test[domain_list],
                                                                     y=self.y_train['death'],
@@ -137,5 +137,3 @@ class superlearner():
         meta_x_labels = self.meta_x[label_columns]
 
         self.df_base_pred['sl_label'] = self.meta_model.predict(meta_x_labels.rename(columns={x:x.replace('_label','') for x in label_columns}))
-
-
