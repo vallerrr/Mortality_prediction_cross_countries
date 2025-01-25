@@ -241,20 +241,12 @@ def read_merged_data(type):
     """
 
     df_HRS = data_reader(source='us', dataset='HRS', bio=False,merge=True)
-    for col in df_HRS.columns:
-        df_HRS[col]=df_HRS[col].astype(float)
-
 
     df_SHARE = data_reader(source='us', dataset='SHARE', bio=False,merge=True)
     df_SHARE = df_SHARE.loc[(df_SHARE['deathY']>2005)|( df_SHARE['death']==0),]
-    for col in df_SHARE.columns:
-        if col not in ['mergeid','isocountry']:
-            df_SHARE[col]=df_SHARE[col].astype(float)
 
     df_ELSA = data_reader(source='us', dataset='ELSA', bio=False,merge=True)
 
-    for col in df_ELSA.columns:
-        df_ELSA[col]=df_ELSA[col].astype(float)
     df_ELSA['death'] = df_ELSA['death_from_index_file']
     # wealth pre-treat
     q = 30
@@ -292,6 +284,14 @@ def read_merged_data(type):
     df_ELSA['dataset'] = 2
 
 
+
+    for col in df_ELSA.columns:
+        df_ELSA[col]=df_ELSA[col].astype(float)
+    for col in df_SHARE.columns:
+        if col not in ['mergeid','isocountry']:
+            df_SHARE[col]=df_SHARE[col].astype(float)
+    for col in df_HRS.columns:
+        df_HRS[col]=df_HRS[col].astype(float)
     if type ==1:
         # 1: HRS + SHARE + ELSA
         # merge without treatment
