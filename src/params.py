@@ -168,16 +168,13 @@ model_params = {"random_state": 87785,
 
 
 
-
-
-
 def confirm_cwd(platform):
     if platform == 'jupyter':
         os.chdir(Path.cwd().parent)
     print(f"cwd: {Path.cwd()}")
 
 # data reader
-def data_reader(source,dataset,bio):
+def data_reader(source,dataset,bio,merge=False):
     """
     read data
     @param bio: whether this is a bio dataset
@@ -205,17 +202,24 @@ def data_reader(source,dataset,bio):
             df.rename(columns={'deathYN': 'death'}, inplace=True)
 
         else:
+            if merge:
+                df = pd.read_csv(data_path/'model_used_data/df_by_us_not_standardised.csv')
             # df = pd.read_csv(file_path+'data_preprocess/data/merge_data_selected_author_rows_no_missing_versioin_3.csv')
-            df = pd.read_csv(data_path/'model_used_data/df_by_us.csv')
+            else:
+                df = pd.read_csv(data_path/'model_used_data/df_by_us.csv')
         if dataset == 'HRS':
             # old dataset
             df = df.loc[df['age'] >= 50, ]
             df.rename(columns={'deathYear': 'death_year', 'deathMonth': 'death_month'}, inplace=True)
             df['deathYR'] = df['death_year'] + df['death_month'] / 12
+            df['everrent'] = [1 if x >= 0 else 0 for x in df['everrent']]
             # new dataset
-            df = pd.read_pickle('/Users/valler/Python/OX_Thesis/OX_thesis/data/HRS/data_preprocess/Data/merge_data_not_standardise_no_missing.pkl')
+            # df = pd.read_pickle('/Users/valler/Python/OX_Thesis/OX_thesis/data/HRS/data_preprocess/Data/merge_data_not_standardise_no_missing.pkl')
         if dataset =='SHARE':
             df = df.loc[(df['deathY'] >= 2006) | (df['death'] == 0),]
+        if dataset == 'ELSA':
+            if 'sleepYN' in df.columns:
+                df = df.drop(['sleepYN'], axis=1)
 
     df = df.loc[df['age'] >= 50,]
     return df
@@ -236,18 +240,52 @@ def read_merged_data(type):
     @return: the merged dataset and domain_lst (intersections)
     """
 
-    # df_HRS = data_reader(source='us', dataset='HRS', bio=False)
-    df_HRS = pd.read_pickle('/Users/valler/Python/OX_Thesis/OX_thesis/data/HRS/data_preprocess/Data/merge_data_not_standardise_no_missing.pkl')
-    df_SHARE = data_reader(source='us', dataset='SHARE', bio=False)
-    df_SHARE = df_SHARE.loc[(df_SHARE['deathY']>2005)|( df_SHARE['death']==0),]
-    df_ELSA = data_reader(source='us', dataset='ELSA', bio=False)
+    df_HRS = data_reader(source='us', dataset='HRS', bio=False,merge=True)
+    for col in df_HRS.columns:
+        df_HRS[col]=df_HRS[col].astype(float)
 
+
+    df_SHARE = data_reader(source='us', dataset='SHARE', bio=False,merge=True)
+    df_SHARE = df_SHARE.loc[(df_SHARE['deathY']>2005)|( df_SHARE['death']==0),]
+    for col in df_SHARE.columns:
+        if col not in ['mergeid','isocountry']:
+            df_SHARE[col]=df_SHARE[col].astype(float)
+
+    df_ELSA = data_reader(source='us', dataset='ELSA', bio=False,merge=True)
+
+    for col in df_ELSA.columns:
+        df_ELSA[col]=df_ELSA[col].astype(float)
+    df_ELSA['death'] = df_ELSA['death_from_index_file']
     # wealth pre-treat
     q = 30
-    df_HRS['ZwealthT'] = pd.cut(df_HRS['ZwealthT'], bins=q, labels=False)
-    df_SHARE['ZwealthT'] = pd.cut(df_SHARE['ZwealthT'], bins=q, labels=False)
-    df_ELSA['ZwealthT'] = pd.cut(df_ELSA['ZwealthT'], bins=q, labels=False)
+    var = 'ZwealthT'
+    df_HRS[var] = pd.cut(df_HRS[var], bins=q, labels=False)
+    df_SHARE[var] = pd.cut(df_SHARE[var], bins=q, labels=False)
+    df_ELSA[var] = pd.cut(df_ELSA[var], bins=q, labels=False)
 
+    # income pre-treat
+    q=10
+    var = 'ZincomeT'
+    df_HRS[var] = pd.cut(df_HRS[var], bins=q, labels=False)
+    #df_SHARE[var] = pd.cut(df_SHARE[var], bins=q, labels=False)
+    df_ELSA[var] = pd.cut(df_ELSA[var], bins=q, labels=False)
+
+    q= 5
+    for var in ['Zfatherseduc', 'Zmotherseduc','Zeduccat']:
+        df_HRS[var] = pd.cut(df_HRS[var], bins=q, labels=False)
+        df_SHARE[var] = pd.cut(df_SHARE[var], bins=q, labels=False)
+        #df_ELSA[var] = pd.cut(df_ELSA[var], bins=q, labels=False)
+
+    unique_bins_HRS={'Zagreeableness': 5, 'sumCAE': 4, 'rocc': 6, 'Zrecentfindiff': 5, 'Zneighsafety': 5, 'Zneighcohesion': 7, 'Zneighdisorder': 7, 'Zmajdiscrim': 5, 'Zdailydiscrim': 5, 'Znegchildren': 5, 'Znegfamily': 5, 'Znegfriends': 5, 'Zposchildren': 5, 'Zposfamily': 5, 'Zposfriends': 5, 'Zangerin': 5, 'Zangerout': 5, 'Zanxiety': 5, 'Zconscientiousness': 5, 'Zcynhostility': 6, 'Zextroversion': 5, 'Zhopelessness': 6, 'Zlifesatis': 7, 'Zloneliness': 5, 'Znegaffect': 10, 'Zneuroticism': 5, 'Zopenness': 5, 'Zoptimism': 6, 'Zperceivedconstraints': 6, 'Zperceivedmastery': 6, 'Zpessimism': 6, 'Zposaffect': 10, 'Zpurpose': 6, 'Zreligiosity': 6, 'ZwealthT': 30, 'sumadultAE': 6, 'fathersocc': 6}
+    for var in unique_bins_HRS.keys():
+        df_HRS[var] = pd.cut(df_HRS[var], bins=unique_bins_HRS[var], labels=False)
+        if var in df_SHARE.columns:
+            df_SHARE[var] = pd.cut(df_SHARE[var], bins=unique_bins_HRS[var], labels=False)
+        if var in df_ELSA.columns:
+            df_ELSA[var] = pd.cut(df_ELSA[var], bins=unique_bins_HRS[var], labels=False)
+
+
+    # binary value
     # label data
     df_HRS['dataset'] = 0
     df_SHARE['dataset'] = 1
@@ -294,7 +332,7 @@ def read_merged_data(type):
     for column in ['death','pn','hhid']:
         if column in domain_lst:
             domain_lst.remove(column)
-
+    domain_lst.sort()
     return df, domain_lst
 
 

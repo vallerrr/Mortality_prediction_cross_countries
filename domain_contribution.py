@@ -22,16 +22,25 @@ os.environ['NUMEXPR_NUM_THREADS'] = '1'
 
 contribution = pd.DataFrame()
 basic_domains = ['demographic', 'child_adverse', 'adult_SES', 'behavioral', 'adult_adverse', 'social_connection', 'psych']
-colors = {'blue':'#62a0cb','orange':'#ff7f0e','green':'#2ca02c'}
+
+colors = {
+    'light_blue': '#a3d5e4',  # Existing light blue
+    'blue': '#41678d',        # Existing blue
+    'purple': '#7b6785',      # Existing purple
+    'red': '#d18375',         # Existing red
+    'peach': '#efb68d',       # Existing peach
+    'teal': '#6aa2a3',        # New teal color
+    'soft_pink': '#d19cbb',   # New soft pink color
+    'warm_yellow': '#f2c46d'  # New warm yellow color
+}
 
 for dataset in ['HRS','SHARE','ELSA','COMB']:
     print(dataset)
     domain_name = dataset
     model_params = params.model_params
 
-    if dataset == 'HRS':
-        df = pd.read_pickle('/Users/valler/Python/OX_Thesis/OX_thesis/data/HRS/data_preprocess/Data/merge_data_not_standardise_no_missing.pkl')
-    elif dataset == 'COMB':
+
+    if dataset == 'COMB':
         comb_type = 3
         domain_name = 'combination_all'
         df, model_params['domain_dict'][domain_name] = params.read_merged_data(type=comb_type)
@@ -53,6 +62,8 @@ for dataset in ['HRS','SHARE','ELSA','COMB']:
     domains.sort()
 
     domain_name_lst,df_eval,iterations = get_dc_params(domains)
+    domain_name_lst.sort()
+    iterations.sort()
 
     df_eval = dc_iteration(iterations,df_eval,df,model_params)
     model_eval_diff_hrs,contribution_hrs = dd_post_process(domain_name_lst,iterations,df_eval)
@@ -149,5 +160,5 @@ for m in range(1, 5):
 figure.tight_layout()
 # Show the plot
 plt.show()
-#plt.savefig(Path.cwd() / 'graphs/model_outputs/domain_contribution_all.pdf')
+plt.savefig(Path.cwd() / 'graphs/model_outputs/domain_contribution_all.pdf')
 
