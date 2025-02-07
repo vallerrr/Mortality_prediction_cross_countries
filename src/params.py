@@ -306,7 +306,6 @@ def read_merged_data(type):
     elif type ==2:
         # 2. HRS+SHARE
         df = pd.merge(left=df_SHARE, right=df_HRS, how='outer')
-
         HRS_columns = list(set(domain_dict['all']).intersection(set(df_HRS.columns)))
         SHARE_columns = list(set(domain_dict['all']).intersection(set(df_SHARE.columns)))
 
