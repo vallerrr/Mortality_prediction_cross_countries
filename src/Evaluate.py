@@ -92,7 +92,7 @@ def cross_entropy(pred,true):
 
 def ffc_rsquare(true, pred, train):
     # TODO：pred here should be probs or true lables?
-    n = float(len(true))
+    n = float(len(train))
     t1 = np.sum(np.power(true - pred, 2.0))
     t2 = np.sum(np.power((true - (np.sum(train) / n)), 2.0))
     return 1.0 - (t1 / t2)

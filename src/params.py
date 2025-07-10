@@ -209,9 +209,9 @@ def data_reader(source,dataset,bio,merge=False):
                 df = pd.read_csv(data_path/'model_used_data/df_by_us.csv')
         if dataset == 'HRS':
             # old dataset
-            df = df.loc[df['age'] >= 50, ]
-            df.rename(columns={'deathYear': 'death_year', 'deathMonth': 'death_month'}, inplace=True)
-            df['deathYR'] = df['death_year'] + df['death_month'] / 12
+            df = df.loc[(df['age'] >= 50)&(df['age']<105), ]
+            #df.rename(columns={'deathYear': 'death_year', 'deathMonth': 'death_month'}, inplace=True)
+            #df['deathYR'] = df['death_year'] + df['death_month'] / 12
             df['everrent'] = [1 if x >= 0 else 0 for x in df['everrent']]
             # new dataset
             # df = pd.read_pickle('/Users/valler/Python/OX_Thesis/OX_thesis/data/HRS/data_preprocess/Data/merge_data_not_standardise_no_missing.pkl')
@@ -221,7 +221,7 @@ def data_reader(source,dataset,bio,merge=False):
             if 'sleepYN' in df.columns:
                 df = df.drop(['sleepYN'], axis=1)
 
-    df = df.loc[df['age'] >= 50,]
+    df = df.loc[(df['age'] >= 50)]
     return df
 
 def standardise(col,df):
@@ -243,11 +243,11 @@ def read_merged_data(type):
     df_HRS = data_reader(source='us', dataset='HRS', bio=False,merge=True)
 
     df_SHARE = data_reader(source='us', dataset='SHARE', bio=False,merge=True)
-    df_SHARE = df_SHARE.loc[(df_SHARE['deathY']>2005)|( df_SHARE['death']==0),]
+    #df_SHARE = df_SHARE.loc[(df_SHARE['deathY']>2005)|(df_SHARE['death']==0),]
 
     df_ELSA = data_reader(source='us', dataset='ELSA', bio=False,merge=True)
 
-    df_ELSA['death'] = df_ELSA['death_from_index_file']
+    # df_ELSA['death'] = df_ELSA['death_from_index_file']
     # wealth pre-treat
     q = 30
     var = 'ZwealthT'
