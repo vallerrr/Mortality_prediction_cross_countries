@@ -11,7 +11,7 @@ else:
     import lightgbm as LGB
     from lifelines import CoxPHFitter
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import confusion_matrix
 import sklearn.metrics as metrics
 import random
@@ -51,6 +51,8 @@ class Model_fixed_test_size():
             domain_list = model_params['domain_dict'][domain]
         else:
             domain_list = domain
+        # print(f'domain_list is {domain_list}')
+
         y_colname = model_params['y_colname']
         random_state = model_params['random_state']
         #print(f'seed is {random_state}')
@@ -158,15 +160,19 @@ class Model_fixed_test_size():
                 self.test_set_predict_prob = self.model.predict_proba(self.X_test)[:, 1]
 
         if model == 'logreg':
-            self.model = LogisticRegression(random_state=random_state)
-            self.model.fit(X=self.X_train,
-                           y=self.y_train,
-                           sample_weight=self.train_sample_weight)
+            self.model = LogisticRegression(solver='liblinear',random_state=random_state)
+            if self.samp_weight_control:
+                self.model.fit(X=self.X_train,
+                               y=self.y_train,
+                               sample_weight=self.train_sample_weight)
+            else:
+                self.model.fit(X=self.X_train,
+                               y=self.y_train)
             self.train_set_predict = self.model.predict(self.X_train)
-            self.train_set_predict_prob = self.model.predict(self.X_train)[:, 1]
+            self.train_set_predict_prob = self.model.predict(self.X_train)
             self.test_set_predict = self.model.predict(self.X_test)
-            self.test_set_predict_prob = self.model.predict_proba(self.X_test)[:, 1]
-
+            self.test_set_predict_prob = self.model.predict_proba(self.X_test)
+            self.test_set_predict_prob = self.test_set_predict_prob[:, 1]
         if model == 'cox':
             domain = list(
                 set(domain_list + ['age', 'death', 'sampWeight', 'hhid', 'maleYN', 'blackYN', 'hispanicYN', 'otherYN',

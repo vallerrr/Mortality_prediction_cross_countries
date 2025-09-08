@@ -150,33 +150,46 @@ def beeswarm_plot(shap_values_test,model,max_display,var_dict,save_control=False
     plt.show()
 
 
-def shap_values_and_dict(model):
-    explainer = shap.TreeExplainer(model.model)
+def shap_values_and_dict(model,model_name='lgb'):
+    if model_name == 'logreg':
+        explainer = shap.LinearExplainer(model.model, model.X_train, feature_dependence="independent")
+    else:
+        explainer = shap.TreeExplainer(model.model)
     shap_values_test = explainer(pd.concat([model.X_train,model.X_test]))
     shap_dict_ = shap_dict(shap_values_test)
 
     return shap_values_test,shap_dict_
 
-def shap_values_and_dict_all(model):
-    explainer = shap.TreeExplainer(model.model)
-    # training set
-    shap_values = explainer(model.X_train)
-    df_shap_data = pd.DataFrame(shap_values.data, columns=shap_values.feature_names)
-    df_shap_values = pd.DataFrame(shap_values.values[:, :, 1], columns=[f'{x}_shap' for x in shap_values.feature_names])
-    df_shap_data = pd.concat([df_shap_data, df_shap_values], axis=1)
-    df_shap_data['dataset'] = ['train']*len(df_shap_data)
 
-    # testing set
-    shap_values  = explainer(model.X_test)
-    df_shap_data_test = pd.DataFrame(shap_values.data, columns=shap_values.feature_names)
-    df_shap_values_test = pd.DataFrame(shap_values.values[:, :, 1], columns=[f'{x}_shap' for x in shap_values.feature_names])
-    df_shap_data_test = pd.concat([df_shap_data_test, df_shap_values_test], axis=1)
-    df_shap_data_test['dataset'] = ['test'] * len(df_shap_data_test)
 
-    # merge
-    df = pd.concat([df_shap_data,df_shap_data_test],axis = 0)
+def shap_values_and_dict_all(model, model_name='lgb'):
+    if model_name == 'logreg':
+        explainer = shap.LinearExplainer(model.model, model.X_train, feature_dependence="independent")
+        is_linear = True
+    else:
+        explainer = shap.TreeExplainer(model.model)
+        is_linear = False
+
+    def process_shap_values(X, dataset_label):
+        shap_values = explainer(X)
+        df_data = pd.DataFrame(shap_values.data, columns=shap_values.feature_names)
+
+        if is_linear:
+            # LinearExplainer returns 2D shap_values (n_samples, n_features)
+            df_values = pd.DataFrame(shap_values.values, columns=[f'{x}_shap' for x in shap_values.feature_names])
+        else:
+            # TreeExplainer returns 3D (n_samples, n_features, n_classes); take class 1
+            df_values = pd.DataFrame(shap_values.values[:, :, 1], columns=[f'{x}_shap' for x in shap_values.feature_names])
+
+        df_combined = pd.concat([df_data, df_values], axis=1)
+        df_combined['dataset'] = dataset_label
+        return df_combined
+
+    df_train = process_shap_values(model.X_train, 'train')
+    df_test = process_shap_values(model.X_test, 'test')
+
+    df = pd.concat([df_train, df_test], axis=0).reset_index(drop=True)
     return df
-
 
 def shap_overall_rank_plot(df_shaps,save_control,var_dict):
 
