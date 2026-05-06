@@ -11,7 +11,8 @@ def shap_dict(shap_values_test):
     @return: shap_dict
     """
     #
-    if len(shap_values_test.shape)==3:
+    print(shap_values_test.values.shape)
+    if len(shap_values_test.values.shape)==3:
         shap_values_test.values=shap_values_test.values[:,:,1]
     shap_dic = {}
     i = 0
@@ -179,7 +180,11 @@ def shap_values_and_dict_all(model, model_name='lgb'):
             df_values = pd.DataFrame(shap_values.values, columns=[f'{x}_shap' for x in shap_values.feature_names])
         else:
             # TreeExplainer returns 3D (n_samples, n_features, n_classes); take class 1
-            df_values = pd.DataFrame(shap_values.values[:, :, 1], columns=[f'{x}_shap' for x in shap_values.feature_names])
+            if len(shap_values.shape)==3:
+                shap_values.values=shap_values.values[:,:,1]
+            
+                
+            df_values = pd.DataFrame(shap_values.values, columns=[f'{x}_shap' for x in shap_values.feature_names])
 
         df_combined = pd.concat([df_data, df_values], axis=1)
         df_combined['dataset'] = dataset_label
